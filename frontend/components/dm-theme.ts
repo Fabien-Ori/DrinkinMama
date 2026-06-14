@@ -1,40 +1,34 @@
-/**
- * Theme inspiration: 1 ou 2 Cocktails
- * Ambiance chaleureuse, élégante, rétro-moderne et "apéro".
- */
 export const DM = {
-  bg: '#F5F2EB',          // Fond crème doux
-  surface: '#FFFFFF',     // Surfaces blanches pour faire ressortir les éléments
-  card: '#FBF8F1',        // Éléments légèrement cassés (off-white)
-  border: '#E8DCC8',      // Bordures chaudes et subtiles
-  text: '#2A241D',        // Texte brun foncé et chaud (moins dur que le noir)
-  muted: '#8A7E6E',       // Texte secondaire taupe/brun
+  bg: '#F5F2EB',          // Beige "avoine" très doux pour reposer les yeux
+  surface: '#FCFAF8',     // Blanc cassé chaud pour les cartes (plus de #FFFFFF éblouissant)
+  card: '#FCFAF8',        // Idem
+  border: '#E8E1D9',      // Bordures douces, gris-beige
   
-  // Couleur Primaire (Marque) : Terracotta / Orange brûlé
-  gold: '#D95C41',
-  goldDark: '#FBE8E4',    // Fond terracotta très pâle
-  goldLight: '#B03F26',   // Terracotta plus sombre pour les textes sur fonds clairs
+  // Couleurs d'accentuation (ajustées pour s'harmoniser avec le fond chaud)
+  gold: '#D96C51',        // Terracotta chaleureux et moins fluo
+  goldLight: '#F0B8A9',
+  goldDark: '#F7E7E3',
   
-  // Couleur Secondaire : Vert Sauge / Olive
-  teal: '#4C6A5A',
-  tealLight: '#658573',
-  tealDark: '#E2EBE5',    // Fond vert pâle
+  teal: '#405B66',        // Bleu ardoise/canard désaturé
+  tealLight: '#9FB5BD',
+  tealDark: '#E4ECF0',
   
-  // Couleur Tertiaire : Vin / Bordeaux
-  purple: '#843B4E',
-  purpleDark: '#F4DEE3',  // Fond bordeaux très pâle
-  purpleBg: '#FAF0F2',    
+  coral: '#E36E5C',
+  coralDark: '#F7E9E7',
   
-  // Touches d'accent
-  coral: '#E07A5F',
-  coralDark: '#FCEBE6',
+  purple: '#423A4A',      // Prune très sombre
+  purpleDark: '#E9E4ED',
+  purpleBg: '#F3EEF5',
   
-  // Couleurs de classement
-  bronze: '#CD7F32',
-  silver: '#A6A6A6',
+  // Textes adoucis
+  text: '#362E29',        // Brun très foncé "espresso" (beaucoup moins agressif que le noir pur)
+  muted: '#8A817A',       // Taupe chaleureux pour le texte secondaire
   
-  // Utilitaires
-  success: '#4A7C59',
-  successDark: '#E0EBE3',
-  danger: '#C84C4C',
-};
+  // États
+  success: '#75A38C',     // Vert sauge
+  successDark: '#E5F0EA',
+  danger: '#D96C51',
+  
+  silver: '#B3ACA6',
+  bronze: '#C9986A',
+} as const;
