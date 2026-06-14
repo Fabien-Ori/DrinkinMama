@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { DM } from '@/constants/dm-theme';
 
 // Adresse de votre API Spring Boot
 const API_URL = 'http://localhost:8090/api/v1/auth';
@@ -80,7 +81,8 @@ export default function LoginScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Taste Odyssey</Text>
+            <Text style={styles.title}>Drinking Mama</Text>
+            <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
 
             {/* Affichage du bandeau d'erreur rouge uniquement si errorMessage contient du texte */}
             {errorMessage ? (
@@ -125,16 +127,23 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: DM.bg,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20
+        marginBottom: 5,
+        color: DM.text,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: DM.muted,
+        marginBottom: 25,
     },
     errorText: {
-        color: '#FF3B30',
-        backgroundColor: '#FFE5E5',
+        color: DM.danger,
+        backgroundColor: '#FDECEB',
         padding: 10,
         borderRadius: 5,
         marginBottom: 15,
@@ -147,23 +156,26 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 400,
         height: 40,
-        borderColor: 'gray',
+        borderColor: DM.border,
+        backgroundColor: DM.surface,
         borderWidth: 1,
         marginBottom: 15,
         paddingHorizontal: 10,
-        borderRadius: 5
+        borderRadius: 8,
+        color: DM.text,
     },
     button: {
-        backgroundColor: '#007AFF',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: DM.gold,
+        padding: 12,
+        borderRadius: 8,
         width: '100%',
         maxWidth: 400,
         alignItems: 'center'
     },
     buttonText: {
         color: 'white',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     // Styles pour le bouton format lien
     linkButton: {
@@ -171,11 +183,11 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     linkText: {
-        color: '#555555',
+        color: DM.muted,
         fontSize: 14,
     },
     linkTextBold: {
-        color: '#007AFF',
+        color: DM.gold,
         fontWeight: '600',
         textDecorationLine: 'underline', // Donne l'effet souligné d'un lien web
     }

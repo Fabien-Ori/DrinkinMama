@@ -56,7 +56,7 @@ export default function HomeScreen() {
             {dailyCocktail.name} — Niveau {dailyCocktail.level}
           </Text>
           <Pressable style={({ pressed }) => [styles.playBtn, pressed && styles.pressed]} onPress={handlePlay}>
-            <MaterialIcons name="play-arrow" size={16} color="#1a1000" />
+            <MaterialIcons name="play-arrow" size={16} color="#FFFFFF" />
             <Text style={styles.playBtnText}>Jouer maintenant</Text>
           </Pressable>
         </View>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   heroGlass: {
     width: 40,
     height: 60,
-    backgroundColor: 'rgba(93, 202, 165, 0.15)',
+    backgroundColor: 'rgba(124, 154, 139, 0.15)',
     borderWidth: 1.5,
     borderColor: DM.tealLight,
     borderRadius: 4,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '70%',
-    backgroundColor: 'rgba(212, 83, 126, 0.5)',
+    backgroundColor: 'rgba(206, 124, 100, 0.5)',
     borderBottomLeftRadius: 6,
     borderBottomRightRadius: 6,
   },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  playBtnText: { fontSize: 14, fontWeight: '500', color: '#1a1000' },
+  playBtnText: { fontSize: 14, fontWeight: '500', color: '#FFFFFF' },
   pressed: { opacity: 0.8 },
   statsGrid: {
     flexDirection: 'row',

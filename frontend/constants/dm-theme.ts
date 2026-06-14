@@ -1,24 +1,24 @@
 export const DM = {
-  bg: '#0d1117',
-  surface: '#161b22',
-  card: '#1c2333',
-  border: '#30363d',
-  gold: '#e6a817',
-  goldLight: '#fac750',
-  goldDark: '#2d2008',
-  teal: '#1D9E75',
-  tealLight: '#5DCAA5',
-  tealDark: '#0a2d22',
-  coral: '#D85A30',
-  coralDark: '#2d1208',
-  purple: '#7F77DD',
-  purpleDark: '#2a2847',
-  purpleBg: '#12102a',
-  text: '#e6edf3',
-  muted: '#8b949e',
-  success: '#3fb950',
-  successDark: '#0d2a14',
-  danger: '#f85149',
-  silver: '#b0b0b0',
-  bronze: '#cd7f32',
+  bg: '#FBF9F6',          // Beige très doux, off-white
+  surface: '#FFFFFF',     // Blanc pur pour aérer
+  card: '#F2EDE4',        // Crème doux pour les cartes
+  border: '#E5DCCF',      // Bordures subtiles
+  gold: '#CE7C64',        // Terracotta pastel et doux (marque)
+  goldLight: '#E09F8C',
+  goldDark: '#F4E7E4',    // Fond terracotta très pâle
+  teal: '#7C9A8B',        // Vert sauge apaisant
+  tealLight: '#A3BDB1',
+  tealDark: '#E6EFEB',    // Fond vert pâle
+  coral: '#D58A7A',
+  coralDark: '#F5EAE7',
+  purple: '#9B6C76',      // Mauve / Vieux rose
+  purpleDark: '#EEDCE0',
+  purpleBg: '#F7F0F2',
+  text: '#4A4036',        // Brun foncé au lieu d'un noir agressif
+  muted: '#938575',       // Taupe pour les textes secondaires
+  success: '#759A81',
+  successDark: '#E7EFE9',
+  danger: '#C86A6A',
+  silver: '#B8B8B8',
+  bronze: '#CD9A5B',
 } as const;

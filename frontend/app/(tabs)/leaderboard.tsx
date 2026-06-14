@@ -44,7 +44,7 @@ export default function LeaderboardScreen() {
                     isFirst && styles.podiumAvatarFirst,
                     {
                       borderColor: barColors[index],
-                      backgroundColor: index === 0 ? '#22201a' : index === 1 ? DM.goldDark : '#2a1d0d',
+                      backgroundColor: index === 0 ? '#FFFFFF' : index === 1 ? DM.goldDark : '#FBF8F1',
                     },
                   ]}>
                   <Text style={[styles.podiumInitials, { color: barColors[index] }]}>{slot.initials}</Text>
