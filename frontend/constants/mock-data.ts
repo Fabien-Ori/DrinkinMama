@@ -35,7 +35,7 @@ export interface ShopItem {
   id: string;
   name: string;
   description: string;
-  emoji: string;
+  emoji: string;s
   thumbBg: string;
   price: number;
   category: 'ingredients' | 'recipes' | 'utensils';

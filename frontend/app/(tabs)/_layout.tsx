@@ -48,7 +48,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons name="person" size={20} color={color} />,
         }}
       />
-      <Tabs.Screen name="shop" options={{ href: null }} />
+      <Tabs.Screen
+        name="shop"
+        options={{
+          title: 'Boutique',
+          tabBarIcon: ({ color }) => <MaterialIcons name="shopping-bag" size={20} color={color} />,
+        }}
+      />
+      {/* <Tabs.Screen name="shop" options={{ href: null }} /> */}
       <Tabs.Screen name="leaderboard" options={{ href: null }} />
       <Tabs.Screen name="authentification" options={{ href: null }} />
       <Tabs.Screen name="register" options={{ href: null }} />

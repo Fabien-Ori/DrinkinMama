@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DM } from '@/constants/dm-theme';
 import { BADGES } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function ProfileScreen() {
   const { player, activities } = usePlayer();
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
               <View style={[styles.xpFill, { width: `${xpPercent}%` as `${number}%` }]} />
             </View>
           </View>
+          <GlobalHeaderRight />
         </View>
 
         <View style={styles.statsGrid}>

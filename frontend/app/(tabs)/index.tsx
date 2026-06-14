@@ -1,19 +1,47 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CoinsBadge } from '@/components/dm/coins-badge';
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
 import { usePlayer } from '@/contexts/player-context';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { player, dailyCocktail, startGame } = usePlayer();
+  
+  // NOUVEAU : On importe "cocktails" (la liste complète) au lieu de l'ancien dailyCocktail fixe
+  const { player, cocktails, startGame } = usePlayer();
+
+  // NOUVEAU : Calcul automatique du cocktail du jour basé sur la date
+  const cocktailDuJour = useMemo(() => {
+    if (!cocktails || cocktails.length === 0) return null;
+    
+    // Calcule le nombre de jours écoulés depuis le 1er janvier 1970
+    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    
+    // Le modulo (%) permet de boucler sur la liste des cocktails de manière cyclique
+    const index = daysSinceEpoch % cocktails.length;
+    return cocktails[index];
+  }, [cocktails]);
+
+  // Vérification de la connexion au chargement
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const token = localStorage.getItem('jwt_token');
+      // Si pas de token, on redirige vers l'écran de connexion
+      if (!token) {
+        router.replace('/authentification');
+      }
+    }
+  }, [router]);
 
   const handlePlay = () => {
-    startGame(dailyCocktail.id);
-    router.push('/game');
+    if (cocktailDuJour) {
+      startGame(cocktailDuJour.id);
+      router.push('/game');
+    }
   };
 
   const quickActions = [
@@ -39,22 +67,31 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        
         <View style={styles.header}>
           <Text style={styles.logo}>🍹 Drinking Mama</Text>
-          <CoinsBadge />
+          <GlobalHeaderRight />
         </View>
 
         <View style={styles.hero}>
-          <View style={styles.heroCocktail}>
-            <View style={styles.heroGlass}>
-              <View style={styles.heroLiquid} />
-              <View style={styles.heroStraw} />
-            </View>
+          {/* NOUVEAU DESIGN : Affichage de l'image du cocktail */}
+          <View style={styles.heroImageContainer}>
+            {cocktailDuJour?.imageUrl ? (
+              <Image 
+                source={{ uri: cocktailDuJour.imageUrl }} 
+                style={styles.heroImage} 
+                resizeMode="cover" 
+              />
+            ) : (
+              <Text style={styles.heroEmoji}>{cocktailDuJour?.emoji}</Text>
+            )}
           </View>
+          
           <Text style={styles.heroTitle}>Cocktail du jour</Text>
           <Text style={styles.heroSub}>
-            {dailyCocktail.name} — Niveau {dailyCocktail.level}
+            {cocktailDuJour?.name} — Niveau {cocktailDuJour?.level}
           </Text>
+          
           <Pressable style={({ pressed }) => [styles.playBtn, pressed && styles.pressed]} onPress={handlePlay}>
             <MaterialIcons name="play-arrow" size={16} color="#FFFFFF" />
             <Text style={styles.playBtnText}>Jouer maintenant</Text>
@@ -115,39 +152,29 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
   },
-  heroCocktail: { marginBottom: 8 },
-  heroGlass: {
-    width: 40,
-    height: 60,
-    backgroundColor: 'rgba(124, 154, 139, 0.15)',
-    borderWidth: 1.5,
-    borderColor: DM.tealLight,
-    borderRadius: 4,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+  
+  /* NOUVEAUX STYLES POUR L'IMAGE DU COCKTAIL DU JOUR */
+  heroImageContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45, // Rend l'image parfaitement ronde
     overflow: 'hidden',
-    position: 'relative',
+    marginBottom: 12,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: DM.goldDark,
   },
-  heroLiquid: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '70%',
-    backgroundColor: 'rgba(206, 124, 100, 0.5)',
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
-  heroStraw: {
-    position: 'absolute',
-    right: 6,
-    top: -15,
-    width: 3,
-    height: 40,
-    backgroundColor: DM.gold,
-    borderRadius: 2,
-    transform: [{ rotate: '10deg' }],
+  heroEmoji: {
+    fontSize: 40,
   },
+  /* FIN DES NOUVEAUX STYLES */
+
   heroTitle: { fontSize: 15, fontWeight: '500', color: DM.text },
   heroSub: { fontSize: 12, color: DM.muted, marginTop: 2 },
   playBtn: {

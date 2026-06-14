@@ -1,18 +1,13 @@
+// frontend/app/(tabs)/mixodex.tsx
+
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
-import { THUMB_COLORS } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
 
 export default function MixodexScreen() {
@@ -33,19 +28,24 @@ export default function MixodexScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      
+      {/* EN-TÊTE AVEC LE NOUVEAU COMPOSANT */}
       <View style={styles.header}>
-        <Text style={styles.title}>Mixodex</Text>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>
-            {player.mixodexUnlocked} / {player.mixodexTotal} débloqués
-          </Text>
+        <View style={styles.titleGroup}>
+          <Text style={styles.title}>Mixodex</Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>
+              {player.mixodexUnlocked} / {player.mixodexTotal}
+            </Text>
+          </View>
         </View>
+        <GlobalHeaderRight />
       </View>
 
       <View style={styles.searchWrap}>
         <TextInput
           style={styles.searchInput}
-          placeholder="🔍  Rechercher un cocktail..."
+          placeholder="Rechercher un cocktail..."
           placeholderTextColor={DM.muted}
           value={search}
           onChangeText={setSearch}
@@ -58,31 +58,38 @@ export default function MixodexScreen() {
             key={cocktail.id}
             style={[styles.card, cocktail.locked && styles.cardLocked]}
             onPress={() => handleCocktailPress(cocktail.id, cocktail.locked)}>
-            <View style={[styles.thumb, { backgroundColor: THUMB_COLORS[cocktail.thumbClass] }]}>
-              {cocktail.locked ? (
-                <MaterialIcons name="lock" size={24} color={DM.muted} />
+            
+            <View style={styles.thumb}>
+              {cocktail.imageUrl ? (
+                <Image source={{ uri: cocktail.imageUrl }} style={styles.image} resizeMode="cover" />
               ) : (
-                <>
-                  <Text style={styles.emoji}>{cocktail.emoji}</Text>
-                  <View style={styles.stars}>
-                    {[1, 2, 3].map((i) => (
-                      <MaterialIcons
-                        key={i}
-                        name={i <= cocktail.stars ? 'star' : 'star-border'}
-                        size={8}
-                        color={i <= cocktail.stars ? DM.gold : DM.muted}
-                      />
-                    ))}
-                  </View>
-                </>
+                <Text style={styles.emoji}>{cocktail.emoji}</Text>
+              )}
+
+              {cocktail.locked ? (
+                <View style={styles.lockedOverlay}>
+                  <MaterialIcons name="lock" size={28} color="#FFFFFF" />
+                </View>
+              ) : (
+                <View style={styles.stars}>
+                  {[1, 2, 3].map((i) => (
+                    <MaterialIcons
+                      key={i}
+                      name={i <= cocktail.stars ? 'star' : 'star-border'}
+                      size={12}
+                      color={i <= cocktail.stars ? DM.gold : '#FFFFFF'}
+                    />
+                  ))}
+                </View>
               )}
             </View>
+
             <View style={styles.info}>
               <Text style={[styles.name, cocktail.locked && styles.nameLocked]}>{cocktail.name}</Text>
               <Text style={styles.meta}>
                 {cocktail.locked
                   ? cocktail.lockReason
-                  : `${cocktail.points} pts · Niv. ${cocktail.level}`}
+                  : `${cocktail.points} pts · Niveau ${cocktail.level}`}
               </Text>
             </View>
           </Pressable>
@@ -96,63 +103,94 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DM.bg },
   header: {
     backgroundColor: DM.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
     borderBottomColor: DM.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { fontSize: 15, fontWeight: '500', color: DM.text },
-  countBadge: {
-    backgroundColor: DM.card,
-    borderWidth: 0.5,
-    borderColor: DM.border,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
+  titleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  countText: { fontSize: 11, color: DM.muted },
-  searchWrap: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 },
+  title: { fontSize: 22, fontWeight: '700', color: DM.text },
+  countBadge: {
+    backgroundColor: DM.bg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  countText: { fontSize: 12, fontWeight: '600', color: DM.muted },
+  searchWrap: { paddingHorizontal: 15, paddingTop: 15, paddingBottom: 5 },
   searchInput: {
     width: '100%',
-    fontSize: 12,
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    fontSize: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
     backgroundColor: DM.surface,
-    borderWidth: 0.5,
-    borderColor: DM.border,
-    borderRadius: 10,
+    borderRadius: 8,
     color: DM.text,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    padding: 12,
-    paddingBottom: 24,
+    gap: 15,
+    padding: 15,
+    paddingBottom: 30,
   },
   card: {
     backgroundColor: DM.surface,
-    borderWidth: 0.5,
-    borderColor: DM.border,
-    borderRadius: 14,
+    borderRadius: 12,
     overflow: 'hidden',
-    width: '48%',
+    width: '47%',
     flexGrow: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  cardLocked: { opacity: 0.45 },
+  cardLocked: { opacity: 0.7 },
   thumb: {
-    height: 70,
+    height: 160, 
+    width: '100%',
+    backgroundColor: '#F0F0F0',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  emoji: { fontSize: 28 },
-  stars: { position: 'absolute', top: 4, right: 6, flexDirection: 'row', gap: 1 },
-  info: { paddingHorizontal: 8, paddingBottom: 8, paddingTop: 6 },
-  name: { fontSize: 12, fontWeight: '500', color: DM.text },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoji: { fontSize: 40 },
+  stars: { 
+    position: 'absolute', 
+    top: 10, 
+    right: 10, 
+    flexDirection: 'row', 
+    gap: 2,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  info: { padding: 12 },
+  name: { fontSize: 15, fontWeight: '700', color: DM.text, marginBottom: 4 },
   nameLocked: { color: DM.muted },
-  meta: { fontSize: 9, color: DM.muted, marginTop: 1 },
+  meta: { fontSize: 12, color: DM.muted },
 });

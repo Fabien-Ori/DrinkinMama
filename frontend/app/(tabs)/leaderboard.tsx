@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DM } from '@/constants/dm-theme';
 import { LEADERBOARD_LIST, PODIUM } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function LeaderboardScreen() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function LeaderboardScreen() {
           <Text style={styles.period}>Semaine du 9 au 13 juin 2026</Text>
         </View>
         <View style={styles.backBtn} />
+        <GlobalHeaderRight />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>

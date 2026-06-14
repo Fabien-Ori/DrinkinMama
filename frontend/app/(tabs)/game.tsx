@@ -1,4 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +8,12 @@ import { ActiveToolVisual } from '@/components/dm/tool-visuals';
 import { DM } from '@/constants/dm-theme';
 import { getActionHint } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function GameScreen() {
+  const router = useRouter();
   const {
+    player,
     gameSession,
     dailyCocktail,
     cocktails,
@@ -50,6 +54,65 @@ export default function GameScreen() {
   const selectedIng = availableIngredients.find((i) => i.id === selectedIngredient);
   const fillLevel = Math.min(0.2 + currentStep * 0.12, 0.85);
 
+  // Vérifie si la partie est terminée
+  const isComplete = totalSteps > 0 && currentStep >= totalSteps;
+
+  // Actions de fin de partie
+  const handleReplay = () => {
+    startGame(cocktail.id);
+  };
+
+  const handleGoToShop = () => {
+    router.push('/shop');
+  };
+
+  const handleChooseAnother = () => {
+    router.push('/mixodex');
+  };
+
+  // ── ÉCRAN DE VICTOIRE ──
+  if (isComplete) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.victoryContainer}>
+          <View style={styles.victoryCard}>
+            <View style={styles.iconCircle}>
+              <MaterialIcons name="local-bar" size={40} color={DM.gold} />
+            </View>
+            
+            <Text style={styles.victoryTitle}>Santé ! 🥂</Text>
+            <Text style={styles.victorySub}>Recette parfaitement exécutée.</Text>
+
+            <View style={styles.rewardBox}>
+              <Text style={styles.rewardLabel}>Gains de la partie</Text>
+              <Text style={styles.rewardValue}>+ {gameSession.sessionPoints} 🪙</Text>
+              <View style={styles.divider} />
+              <Text style={styles.totalLabel}>Solde actuel : {player?.coins || 0} 🪙</Text>
+            </View>
+
+            <View style={styles.actionsContainer}>
+              <Pressable style={({ pressed }) => [styles.primaryBtn, pressed && styles.pressed]} onPress={handleReplay}>
+                <MaterialIcons name="replay" size={20} color="#FFFFFF" />
+                <Text style={styles.primaryBtnText}>Rejouer ce cocktail</Text>
+              </Pressable>
+
+              <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && styles.pressed]} onPress={handleChooseAnother}>
+                <MaterialIcons name="menu-book" size={20} color={DM.teal} />
+                <Text style={styles.secondaryBtnText}>Choisir une autre recette</Text>
+              </Pressable>
+
+              <Pressable style={({ pressed }) => [styles.tertiaryBtn, pressed && styles.pressed]} onPress={handleGoToShop}>
+                <MaterialIcons name="shopping-bag" size={20} color={DM.muted} />
+                <Text style={styles.tertiaryBtnText}>Aller à la boutique</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── ÉCRAN DE JEU NORMAL ──
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
@@ -63,6 +126,7 @@ export default function GameScreen() {
           <MaterialIcons name="monetization-on" size={13} color={DM.gold} />
           <Text style={styles.pointsText}>{gameSession.sessionPoints} pts</Text>
         </View>
+        <GlobalHeaderRight />
       </View>
 
       <View style={styles.progressContainer}>
@@ -260,7 +324,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   toolsPanel: {
-    width: 56,              // réduit de 72 → 56
+    width: 56,
     backgroundColor: DM.surface,
     borderWidth: 0.5,
     borderColor: DM.border,
@@ -284,7 +348,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
 
-  // ── Bouton collapse (flèche sur le côté du panneau) ──
+  // ── Bouton collapse ──
   collapseBtn: {
     width: 16,
     height: 40,
@@ -296,7 +360,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // ── Tab réduit quand panneau masqué ──
+  // ── Tab réduit ──
   expandTab: {
     width: 20,
     backgroundColor: DM.surface,
@@ -403,4 +467,132 @@ const styles = StyleSheet.create({
   chipEmoji: { fontSize: 18 },
   chipLabel: { fontSize: 8, color: DM.muted, marginTop: 2 },
   chipLabelSelected: { color: DM.tealLight },
+
+  // ── Styles Écran de Victoire ──
+  victoryContainer: {
+    flex: 1,
+    backgroundColor: DM.bg,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  victoryCard: {
+    backgroundColor: DM.surface,
+    borderRadius: 24,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: DM.goldDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    shadowColor: DM.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  victoryTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: DM.text,
+    marginBottom: 6,
+  },
+  victorySub: {
+    fontSize: 15,
+    color: DM.muted,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  rewardBox: {
+    backgroundColor: DM.bg,
+    width: '100%',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: DM.border,
+  },
+  rewardLabel: {
+    fontSize: 12,
+    color: DM.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  rewardValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: DM.gold,
+    marginBottom: 15,
+  },
+  divider: {
+    height: 1,
+    width: '80%',
+    backgroundColor: DM.border,
+    marginBottom: 15,
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DM.text,
+  },
+  actionsContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  primaryBtn: {
+    backgroundColor: DM.gold,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  secondaryBtn: {
+    backgroundColor: DM.tealDark,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  secondaryBtnText: {
+    color: DM.teal,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  tertiaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
+  tertiaryBtnText: {
+    color: DM.muted,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
 });

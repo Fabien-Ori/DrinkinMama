@@ -8,6 +8,7 @@ import { CoinsBadge } from '@/components/dm/coins-badge';
 import { DM } from '@/constants/dm-theme';
 import { ShopItem } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
+import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 type ShopTab = ShopItem['category'];
 
@@ -32,6 +33,7 @@ export default function ShopScreen() {
         </Pressable>
         <Text style={styles.title}>Boutique</Text>
         <CoinsBadge />
+        <GlobalHeaderRight />
       </View>
 
       <View style={styles.tabs}>

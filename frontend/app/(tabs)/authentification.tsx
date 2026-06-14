@@ -52,6 +52,7 @@ export default function LoginScreen() {
 
             // GESTION DE L'ALERTE DE SUCCÈS COMPATIBLE WEB ET MOBILE
             if (Platform.OS === 'web') {
+                localStorage.setItem('jwt_token', data.token);
                 // Alerte classique pour navigateur web
                 alert("Connexion Réussie ! Votre Token JWT a bien été généré par l'API.");
                 // Redirection immédiate vers la page explore
@@ -79,45 +80,54 @@ export default function LoginScreen() {
         }
     };
 
-    return (
+   return (
         <View style={styles.container}>
-            <Text style={styles.title}>Drinking Mama</Text>
-            <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
+            <View style={styles.formContainer}>
+                <Text style={styles.title}>Drinking Mama</Text>
+                <Text style={styles.subtitle}>Prêt(e) à shaker ? Connectez-vous.</Text>
 
-            {/* Affichage du bandeau d'erreur rouge uniquement si errorMessage contient du texte */}
-            {errorMessage ? (
-                <Text style={styles.errorText}>{errorMessage}</Text>
-            ) : null}
+                {errorMessage ? (
+                    <Text style={styles.errorText}>{errorMessage}</Text>
+                ) : null}
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Mot de passe"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Adresse e-mail</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="hello@exemple.com"
+                        placeholderTextColor={DM.silver}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+                </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Se connecter</Text>
-            </TouchableOpacity>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Mot de passe</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="••••••••"
+                        placeholderTextColor={DM.silver}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                    />
+                </View>
 
-            {/* NOUVEAU : Bouton format lien pour créer un compte */}
-            <TouchableOpacity
-                style={styles.linkButton}
-                onPress={() => router.push('/register')}
-            >
-                <Text style={styles.linkText}>
-                    Pas de compte ? <Text style={styles.linkTextBold}>Créer un compte</Text>
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                    <Text style={styles.buttonText}>Se connecter</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.linkButton}
+                    onPress={() => router.push('/register')}
+                >
+                    <Text style={styles.linkText}>
+                        Nouveau ici ? <Text style={styles.linkTextBold}>Créer un compte</Text>
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -127,68 +137,89 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        alignItems: 'center',
-        backgroundColor: DM.bg,
+        backgroundColor: DM.bg, // Utilise maintenant le blanc cassé chic
+    },
+    formContainer: {
+        width: '100%',
+        maxWidth: 400,
+        alignSelf: 'center',
+        backgroundColor: DM.surface,
+        padding: 30,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.05,
+        shadowRadius: 20,
+        elevation: 5,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 5,
+        fontSize: 32,
+        fontWeight: '800',
         color: DM.text,
+        marginBottom: 8,
+        textAlign: 'center',
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 16,
         color: DM.muted,
-        marginBottom: 25,
+        marginBottom: 30,
+        textAlign: 'center',
     },
     errorText: {
         color: DM.danger,
-        backgroundColor: '#FDECEB',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 15,
-        width: '100%',
-        maxWidth: 400,
+        backgroundColor: '#FFF0ED',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 20,
         textAlign: 'center',
-        fontWeight: '500'
+        fontWeight: '500',
+        overflow: 'hidden'
+    },
+    inputGroup: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: DM.text,
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     input: {
         width: '100%',
-        maxWidth: 400,
-        height: 40,
-        borderColor: DM.border,
-        backgroundColor: DM.surface,
+        height: 50,
+        backgroundColor: DM.bg,
         borderWidth: 1,
-        marginBottom: 15,
-        paddingHorizontal: 10,
+        borderColor: DM.border,
+        paddingHorizontal: 15,
         borderRadius: 8,
         color: DM.text,
+        fontSize: 16,
     },
     button: {
         backgroundColor: DM.gold,
-        padding: 12,
+        paddingVertical: 15,
         borderRadius: 8,
-        width: '100%',
-        maxWidth: 400,
-        alignItems: 'center'
+        alignItems: 'center',
+        marginTop: 10,
     },
     buttonText: {
         color: 'white',
-        fontWeight: 'bold',
+        fontWeight: '700',
         fontSize: 16,
     },
-    // Styles pour le bouton format lien
     linkButton: {
-        marginTop: 20,
-        padding: 10,
+        marginTop: 25,
+        alignItems: 'center',
     },
     linkText: {
         color: DM.muted,
         fontSize: 14,
     },
     linkTextBold: {
-        color: DM.gold,
-        fontWeight: '600',
-        textDecorationLine: 'underline', // Donne l'effet souligné d'un lien web
+        color: DM.text,
+        fontWeight: '700',
+        textDecorationLine: 'underline',
     }
 });
