@@ -1,0 +1,197 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { DM } from '@/constants/dm-theme';
+import { BADGES } from '@/constants/mock-data';
+import { usePlayer } from '@/contexts/player-context';
+
+export default function ProfileScreen() {
+  const { player, activities } = usePlayer();
+  const xpPercent = (player.xp / player.xpMax) * 100;
+
+  const stats = [
+    { label: 'Pièces', value: player.coins.toLocaleString('fr-FR'), icon: 'monetization-on' as const, color: DM.gold },
+    { label: 'Cocktails réalisés', value: String(player.cocktailsCompleted), icon: 'menu-book' as const, color: DM.tealLight },
+    { label: 'Rang global', value: player.globalRank, icon: 'emoji-events' as const, color: DM.purple },
+    { label: 'Série actuelle', value: `${player.streak} j.`, icon: 'whatshot' as const, color: DM.coral },
+  ];
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.avatarRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{player.initials}</Text>
+            </View>
+            <View>
+              <Text style={styles.name}>{player.name}</Text>
+              <View style={styles.rankBadge}>
+                <MaterialIcons name="military-tech" size={12} color={DM.gold} />
+                <Text style={styles.rankText}>{player.rankTitle}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.xpWrap}>
+            <View style={styles.xpLabel}>
+              <Text style={styles.xpMuted}>XP Niveau {player.level}</Text>
+              <Text style={styles.xpMuted}>
+                {player.xp.toLocaleString('fr-FR')} / {player.xpMax.toLocaleString('fr-FR')}
+              </Text>
+            </View>
+            <View style={styles.xpTrack}>
+              <View style={[styles.xpFill, { width: `${xpPercent}%` as `${number}%` }]} />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.statsGrid}>
+          {stats.map((stat) => (
+            <View key={stat.label} style={styles.profileStat}>
+              <MaterialIcons name={stat.icon} size={16} color={stat.color} style={styles.psIcon} />
+              <Text style={styles.psVal}>{stat.value}</Text>
+              <Text style={styles.psLabel}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.badgesSection}>
+          <Text style={styles.sectionTitle}>Badges</Text>
+          <View style={styles.badgesRow}>
+            {BADGES.map((badge) => (
+              <View key={badge.id} style={[styles.badgeItem, badge.earned && styles.badgeEarned]}>
+                <MaterialIcons
+                  name={badge.icon as 'star'}
+                  size={20}
+                  color={badge.earned ? DM.gold : DM.muted}
+                />
+                <Text style={[styles.badgeLabel, badge.earned && styles.badgeLabelEarned]}>
+                  {badge.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.activitySection}>
+          <Text style={styles.sectionTitle}>Activité récente</Text>
+          {activities.map((activity) => (
+            <View key={activity.id} style={styles.activityRow}>
+              <MaterialIcons
+                name={activity.type === 'success' ? 'check-circle' : 'shopping-bag'}
+                size={14}
+                color={activity.type === 'success' ? DM.success : DM.tealLight}
+              />
+              <Text style={styles.activityLabel}>{activity.label}</Text>
+              <Text
+                style={[
+                  styles.activityPts,
+                  { color: activity.points >= 0 ? DM.gold : DM.danger },
+                ]}>
+                {activity.points >= 0 ? '+' : ''}
+                {activity.points} pts
+              </Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: DM.bg },
+  content: { paddingBottom: 24 },
+  header: {
+    backgroundColor: DM.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: DM.border,
+  },
+  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: DM.purpleDark,
+    borderWidth: 2,
+    borderColor: DM.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 20, fontWeight: '500', color: DM.purple },
+  name: { fontSize: 16, fontWeight: '500', color: DM.text },
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: DM.goldDark,
+    borderWidth: 0.5,
+    borderColor: DM.gold,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 2,
+    alignSelf: 'flex-start',
+  },
+  rankText: { fontSize: 11, color: DM.goldLight },
+  xpWrap: { marginTop: 8 },
+  xpLabel: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
+  xpMuted: { fontSize: 10, color: DM.muted },
+  xpTrack: {
+    backgroundColor: DM.card,
+    borderRadius: 4,
+    height: 6,
+    borderWidth: 0.5,
+    borderColor: DM.border,
+    overflow: 'hidden',
+  },
+  xpFill: { backgroundColor: DM.purple, height: '100%', borderRadius: 4 },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    padding: 12,
+  },
+  profileStat: {
+    backgroundColor: DM.surface,
+    borderWidth: 0.5,
+    borderColor: DM.border,
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    width: '48%',
+    flexGrow: 1,
+  },
+  psIcon: { marginBottom: 4 },
+  psVal: { fontSize: 22, fontWeight: '500', color: DM.text },
+  psLabel: { fontSize: 10, color: DM.muted, marginTop: 2, textAlign: 'center' },
+  badgesSection: { paddingHorizontal: 12, paddingBottom: 12 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: DM.muted,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  badgesRow: { flexDirection: 'row', gap: 8 },
+  badgeItem: {
+    flex: 1,
+    backgroundColor: DM.surface,
+    borderWidth: 0.5,
+    borderColor: DM.border,
+    borderRadius: 10,
+    padding: 8,
+    alignItems: 'center',
+  },
+  badgeEarned: { borderColor: DM.gold },
+  badgeLabel: { fontSize: 9, color: DM.muted, marginTop: 3, textAlign: 'center' },
+  badgeLabelEarned: { color: DM.goldLight },
+  activitySection: { paddingHorizontal: 12 },
+  activityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
+  activityLabel: { flex: 1, fontSize: 11, color: DM.muted },
+  activityPts: { fontSize: 11, fontWeight: '500' },
+});
