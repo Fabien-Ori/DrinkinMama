@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { DM } from '@/constants/dm-theme';
 
 // Adresse de votre API Spring Boot pour la création d'utilisateur
-const API_URL = 'http://localhost:8090/api/v1/auth';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
 
 export default function RegisterScreen() {
     const router = useRouter();

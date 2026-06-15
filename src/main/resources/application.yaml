@@ -1,12 +1,12 @@
 server:
-  port: 8090
+  port: ${PORT:8090}
   forward-headers-strategy: framework
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/drinkin_mama
-    username: postgres
-    password: motdepassepostgres
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/drinkin_mama}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:motdepassepostgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
