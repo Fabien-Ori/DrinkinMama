@@ -59,8 +59,8 @@ export default function LoginScreen() {
             if (Platform.OS === 'web') {
                 // Alerte classique pour navigateur web
                 alert("Connexion Réussie ! Votre Token JWT a bien été généré par l'API.");
-                // Redirection immédiate vers la page explore
-                router.push('/explore');
+                // Redirection immédiate vers la page d'accueil
+                router.push('/');
             } else {
                 // Boîte de dialogue native pour iOS / Android
                 Alert.alert(
@@ -70,7 +70,7 @@ export default function LoginScreen() {
                         {
                             text: "Super, redirection !",
                             onPress: () => {
-                                router.push('/explore');
+                                router.push('/');
                             }
                         }
                     ]

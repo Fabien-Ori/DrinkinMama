@@ -20,9 +20,9 @@ export default function AppTabs() {
             </Pressable>
           </Link>
 
-          <Link href="/explore" asChild>
+          <Link href="/game" asChild>
             <Pressable style={styles.tabButtonView}>
-              <ThemedText type="small">Explore</ThemedText>
+              <ThemedText type="small">Jouer</ThemedText>
             </Pressable>
           </Link>
 
