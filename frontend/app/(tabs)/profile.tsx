@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { DM } from '@/constants/dm-theme';
-import { BADGES } from '@/constants/mock-data';
+
 import { usePlayer } from '@/contexts/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function ProfileScreen() {
-  const { player, activities, user, logout } = usePlayer();
+  const { player, activities, user, logout, badges } = usePlayer();
   const router = useRouter();
   const xpPercent = (player.xp / player.xpMax) * 100;
 
@@ -80,7 +80,7 @@ export default function ProfileScreen() {
             <View style={styles.badgesSection}>
               <Text style={styles.sectionTitle}>Badges</Text>
               <View style={styles.badgesRow}>
-                {BADGES.map((badge) => (
+                {badges.map((badge) => (
                   <View key={badge.id} style={[styles.badgeItem, badge.earned && styles.badgeEarned]}>
                     <MaterialIcons
                       name={badge.icon as 'star'}

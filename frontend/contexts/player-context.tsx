@@ -6,6 +6,7 @@ import {
   BASE_INGREDIENTS,
   BASE_TOOLS,
   COCKTAILS,
+  BADGES,
   IngredientId,
   SHOP_INGREDIENT_DEFS,
   SHOP_ITEMS,
@@ -17,6 +18,7 @@ import {
   type GameIngredient,
   type GameTool,
   type ShopItem,
+  type Badge,
 } from '@/constants/mock-data';
 
 interface PlayerState {
@@ -73,6 +75,7 @@ interface PlayerContextValue {
   token: string | null;
   login: (token: string) => Promise<void>;
   logout: () => void;
+  badges: Badge[];
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -101,7 +104,7 @@ function showAlert(title: string, message: string) {
   }
 }
 
-function buildAvailableIngredients(shopItems: ShopItem[]): GameIngredient[] {
+function buildAvailableIngredients(shopItems: ShopItem[], baseIngredients: GameIngredient[]): GameIngredient[] {
   const shopIngredients = shopItems
     .filter((item) => item.category === 'ingredients' && item.owned && item.gameIngredientId)
     .map((item) => {
@@ -111,10 +114,11 @@ function buildAvailableIngredients(shopItems: ShopItem[]): GameIngredient[] {
     })
     .filter((item): item is GameIngredient => item !== null);
 
-  return [...BASE_INGREDIENTS, ...shopIngredients];
+  const base = baseIngredients.filter(i => !i.fromShop);
+  return [...base, ...shopIngredients];
 }
 
-function buildAvailableTools(shopItems: ShopItem[]): GameTool[] {
+function buildAvailableTools(shopItems: ShopItem[], baseTools: GameTool[]): GameTool[] {
   const shopTools = shopItems
     .filter((item) => item.category === 'utensils' && item.owned && item.gameToolId)
     .map((item) => {
@@ -124,24 +128,30 @@ function buildAvailableTools(shopItems: ShopItem[]): GameTool[] {
     })
     .filter((item): item is GameTool => item !== null);
 
-  return [...BASE_TOOLS, ...shopTools];
+  const base = baseTools.filter(t => !t.fromShop);
+  return [...base, ...shopTools];
 }
 
-function applyCocktailUnlocks(shopItems: ShopItem[]): Cocktail[] {
+function applyCocktailUnlocks(shopItems: ShopItem[], cocktailsSource: Cocktail[]): Cocktail[] {
   const unlockedIds = new Set(
     shopItems
       .filter((item) => item.category === 'recipes' && item.owned && item.unlocksCocktailId)
       .map((item) => item.unlocksCocktailId!),
   );
 
-  return COCKTAILS.map((cocktail) =>
+  return cocktailsSource.map((cocktail) =>
     unlockedIds.has(cocktail.id) ? { ...cocktail, locked: false, lockReason: undefined } : cocktail,
   );
 }
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<PlayerState>(INITIAL_PLAYER);
-  const [shopItems, setShopItems] = useState(SHOP_ITEMS);
+  const [shopItems, setShopItems] = useState<ShopItem[]>(SHOP_ITEMS);
+  const [badges, setBadges] = useState<Badge[]>(BADGES);
+  const [cocktailsList, setCocktailsList] = useState<Cocktail[]>(COCKTAILS);
+  const [ingredientsList, setIngredientsList] = useState<GameIngredient[]>(BASE_INGREDIENTS);
+  const [toolsList, setToolsList] = useState<GameTool[]>(BASE_TOOLS);
+
   const [activities, setActivities] = useState(ACTIVITIES);
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
   const [selectedTool, setSelectedTool] = useState<ToolId>('glass');
@@ -152,6 +162,46 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
   const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
+
+  const fetchGameData = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/api/v1/game/data`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.cocktails && data.cocktails.length > 0) {
+          setCocktailsList(data.cocktails);
+        }
+        if (data.shopItems && data.shopItems.length > 0) {
+          setShopItems((prev) => {
+            return data.shopItems.map((dbItem: ShopItem) => {
+              const prevItem = prev.find((i) => i.id === dbItem.id);
+              return { ...dbItem, owned: prevItem ? prevItem.owned : dbItem.owned };
+            });
+          });
+        }
+        if (data.badges && data.badges.length > 0) {
+          setBadges((prev) => {
+            return data.badges.map((dbBadge: Badge) => {
+              const prevBadge = prev.find((b) => b.id === dbBadge.id);
+              return { ...dbBadge, earned: prevBadge ? prevBadge.earned : dbBadge.earned };
+            });
+          });
+        }
+        if (data.ingredients && data.ingredients.length > 0) {
+          setIngredientsList(data.ingredients);
+        }
+        if (data.tools && data.tools.length > 0) {
+          setToolsList(data.tools);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch game metadata, using local mock data:', err);
+    }
+  }, [BASE_API_URL]);
+
+  useEffect(() => {
+    fetchGameData();
+  }, [fetchGameData]);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -225,11 +275,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [login]);
 
-  const cocktails = useMemo(() => applyCocktailUnlocks(shopItems), [shopItems]);
+  const cocktails = useMemo(() => applyCocktailUnlocks(shopItems, cocktailsList), [shopItems, cocktailsList]);
   const dailyCocktail = cocktails.find((c) => c.id === 'mojito-passion') ?? cocktails[0];
   const unlockedCocktails = cocktails.filter((c) => !c.locked);
-  const availableIngredients = useMemo(() => buildAvailableIngredients(shopItems), [shopItems]);
-  const availableTools = useMemo(() => buildAvailableTools(shopItems), [shopItems]);
+  const availableIngredients = useMemo(() => buildAvailableIngredients(shopItems, ingredientsList), [shopItems, ingredientsList]);
+  const availableTools = useMemo(() => buildAvailableTools(shopItems, toolsList), [shopItems, toolsList]);
 
   const startGame = useCallback(
     (cocktailId: string) => {
@@ -394,6 +444,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       token,
       login,
       logout,
+      badges,
     }),
     [
       player,
@@ -415,6 +466,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       token,
       login,
       logout,
+      badges,
     ],
   );
 
