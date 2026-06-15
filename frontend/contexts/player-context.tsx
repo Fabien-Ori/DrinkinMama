@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
 
 import {
@@ -42,6 +42,15 @@ interface GameSession {
   completedSteps: number[];
 }
 
+export interface DbUser {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  biography?: string;
+  userImage?: string;
+}
+
 interface PlayerContextValue {
   player: PlayerState;
   shopItems: ShopItem[];
@@ -60,6 +69,10 @@ interface PlayerContextValue {
   selectedTool: ToolId;
   selectedIngredient: IngredientId | null;
   buyItem: (itemId: string) => boolean;
+  user: DbUser | null;
+  token: string | null;
+  login: (token: string) => Promise<void>;
+  logout: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -133,6 +146,65 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
   const [selectedTool, setSelectedTool] = useState<ToolId>('glass');
   const [selectedIngredient, setSelectedIngredient] = useState<IngredientId | null>(null);
+
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<DbUser | null>(null);
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
+  const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
+
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    if (Platform.OS === 'web') {
+      localStorage.removeItem('jwt_token');
+    }
+    setPlayer(INITIAL_PLAYER);
+  }, []);
+
+  const fetchUserProfile = useCallback(async (jwtToken: string) => {
+    try {
+      const response = await fetch(`${BASE_API_URL}/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data);
+        setPlayer((prev) => ({
+          ...prev,
+          name: data.username,
+          initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
+        }));
+      } else {
+        console.error('Failed to fetch user profile:', response.status);
+        if (response.status === 403 || response.status === 401) {
+          logout();
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
+    }
+  }, [logout]);
+
+  const login = useCallback(async (jwtToken: string) => {
+    setToken(jwtToken);
+    if (Platform.OS === 'web') {
+      localStorage.setItem('jwt_token', jwtToken);
+    }
+    await fetchUserProfile(jwtToken);
+  }, [fetchUserProfile]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const storedToken = localStorage.getItem('jwt_token');
+      if (storedToken) {
+        login(storedToken);
+      }
+    }
+  }, [login]);
 
   const cocktails = useMemo(() => applyCocktailUnlocks(shopItems), [shopItems]);
   const dailyCocktail = cocktails.find((c) => c.id === 'mojito-passion') ?? cocktails[0];
@@ -287,6 +359,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       selectedTool,
       selectedIngredient,
       buyItem,
+      user,
+      token,
+      login,
+      logout,
     }),
     [
       player,
@@ -304,6 +380,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       selectedTool,
       selectedIngredient,
       buyItem,
+      user,
+      token,
+      login,
+      logout,
     ],
   );
 

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { DM } from '@/constants/dm-theme';
+import { usePlayer } from '@/contexts/player-context';
 
 // Adresse de votre API Spring Boot
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
 
 export default function LoginScreen() {
     const router = useRouter();
+    const { login } = usePlayer();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -50,9 +52,11 @@ export default function LoginScreen() {
             const data = await response.json();
             console.log('Connexion réussie, Token JWT :', data.token);
 
+            // Connexion dans le contexte global (charge aussi le profil)
+            await login(data.token);
+
             // GESTION DE L'ALERTE DE SUCCÈS COMPATIBLE WEB ET MOBILE
             if (Platform.OS === 'web') {
-                localStorage.setItem('jwt_token', data.token);
                 // Alerte classique pour navigateur web
                 alert("Connexion Réussie ! Votre Token JWT a bien été généré par l'API.");
                 // Redirection immédiate vers la page explore
