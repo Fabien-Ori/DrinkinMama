@@ -173,11 +173,30 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setUser(data);
-        setPlayer((prev) => ({
-          ...prev,
-          name: data.username,
-          initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
-        }));
+        if (Platform.OS === 'web') {
+          const savedPlayerStr = localStorage.getItem(`player_${data.email}`);
+          if (savedPlayerStr) {
+            setPlayer(JSON.parse(savedPlayerStr));
+          } else {
+            const newPlayer: PlayerState = {
+              name: data.username,
+              initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
+              rank: '#Unranked',
+              rankTitle: 'Apprenti Mixologue',
+              coins: 0,
+              level: 1,
+              xp: 0,
+              xpMax: 1000,
+              mixodexUnlocked: 0,
+              mixodexTotal: 48,
+              streak: 0,
+              globalRank: '#Unranked',
+              cocktailsCompleted: 0,
+            };
+            setPlayer(newPlayer);
+            localStorage.setItem(`player_${data.email}`, JSON.stringify(newPlayer));
+          }
+        }
       } else {
         console.error('Failed to fetch user profile:', response.status);
         if (response.status === 403 || response.status === 401) {
@@ -235,11 +254,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const completeGame = useCallback((cocktail: Cocktail, totalPoints: number) => {
-    setPlayer((prev) => ({
-      ...prev,
-      coins: prev.coins + totalPoints,
-      xp: Math.min(prev.xp + totalPoints, prev.xpMax),
-    }));
+    setPlayer((prev) => {
+      const updated = {
+        ...prev,
+        coins: prev.coins + totalPoints,
+        xp: Math.min(prev.xp + totalPoints, prev.xpMax),
+      };
+      if (user && Platform.OS === 'web') {
+        localStorage.setItem(`player_${user.email}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
     setActivities((prev) => [
       {
         id: Date.now().toString(),
@@ -251,7 +276,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     ]);
     showAlert('Bravo ! 🍹', `${cocktail.name} terminé ! +${totalPoints} pts`);
     setGameSession(null);
-  }, []);
+  }, [user]);
 
   const performAction = useCallback(() => {
     if (!gameSession) return false;
@@ -317,7 +342,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      setPlayer((prev) => ({ ...prev, coins: prev.coins - item.price }));
+      setPlayer((prev) => {
+        const updated = { ...prev, coins: prev.coins - item.price };
+        if (user && Platform.OS === 'web') {
+          localStorage.setItem(`player_${user.email}`, JSON.stringify(updated));
+        }
+        return updated;
+      });
       setShopItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, owned: true } : i)));
       setActivities((prev) => [
         {
@@ -337,7 +368,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       showAlert('Achat réussi !', message);
       return true;
     },
-    [player.coins, shopItems],
+    [player.coins, shopItems, user],
   );
 
   const value = useMemo<PlayerContextValue>(

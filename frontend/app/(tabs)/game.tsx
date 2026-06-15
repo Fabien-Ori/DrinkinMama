@@ -25,6 +25,7 @@ export default function GameScreen() {
     performAction,
     availableTools,
     availableIngredients,
+    user,
   } = usePlayer();
 
   // État pour masquer/afficher les panneaux latéraux
@@ -87,7 +88,11 @@ export default function GameScreen() {
               <Text style={styles.rewardLabel}>Gains de la partie</Text>
               <Text style={styles.rewardValue}>+ {gameSession.sessionPoints} 🪙</Text>
               <View style={styles.divider} />
-              <Text style={styles.totalLabel}>Solde actuel : {player?.coins || 0} 🪙</Text>
+              {user ? (
+                <Text style={styles.totalLabel}>Solde actuel : {player?.coins || 0} 🪙</Text>
+              ) : (
+                <Text style={styles.totalLabel}>Connectez-vous pour conserver vos gains !</Text>
+              )}
             </View>
 
             <View style={styles.actionsContainer}>

@@ -5,7 +5,9 @@ import { DM } from '@/constants/dm-theme';
 import { usePlayer } from '@/contexts/player-context';
 
 export function CoinsBadge() {
-  const { player } = usePlayer();
+  const { player, user } = usePlayer();
+
+  if (!user) return null;
 
   return (
     <View style={styles.badge}>
