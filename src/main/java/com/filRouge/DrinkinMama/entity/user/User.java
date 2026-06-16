@@ -103,6 +103,11 @@ public class User implements UserDetails {
         return rankTitle == null ? "Apprenti Mixologue" : rankTitle;
     }
 
+    public String getProfileUsername() {
+        return this.username;
+    }
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role != null ? role.getAuthorities() : null;

@@ -20,7 +20,7 @@ interface LeaderboardPlayer {
 
 export default function LeaderboardScreen() {
   const router = useRouter();
-  const { player, token } = usePlayer();
+  const { player, token, user } = usePlayer();
   const [usersList, setUsersList] = useState<LeaderboardPlayer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,12 +43,12 @@ export default function LeaderboardScreen() {
           
           const sorted = userResponses
             .map((u: any) => {
-              const isCurrentUser = u.email === player.name || u.username === player.name || u.username === player.initials;
+              const isCurrentUser = user && (u.email === user.email || u.id === user.id);
               return {
                 rank: 0,
-                initials: u.username ? u.username.slice(0, 2).toUpperCase() : 'JD',
-                name: u.username || 'Joueur',
-                score: u.coins ?? 0,
+                initials: isCurrentUser ? player.initials : (u.username ? u.username.slice(0, 2).toUpperCase() : 'JD'),
+                name: isCurrentUser ? player.name : (u.username || 'Joueur'),
+                score: isCurrentUser ? player.coins : (u.coins ?? 0),
                 isMe: isCurrentUser,
                 avatarBg: isCurrentUser ? DM.purpleDark : '#1a0d1e',
                 avatarColor: isCurrentUser ? DM.purple : '#cd7f32',
@@ -67,7 +67,7 @@ export default function LeaderboardScreen() {
     };
 
     fetchLeaderboard();
-  }, [token, player.name, player.initials, BASE_API_URL]);
+  }, [token, player.name, player.initials, player.coins, user, BASE_API_URL]);
 
   const podiumList = usersList.slice(0, 3);
   const podiumSlots: LeaderboardPlayer[] = [];
