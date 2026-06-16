@@ -331,6 +331,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             setActivities([]);
             localStorage.setItem(`activities_${data.email}`, JSON.stringify([]));
           }
+
+          // Restore purchased shop items from localStorage
+          const savedPurchasesStr = localStorage.getItem(`purchases_${data.email}`);
+          if (savedPurchasesStr) {
+            const ownedIds: string[] = JSON.parse(savedPurchasesStr);
+            setShopItems((prev) => prev.map((i) => ({ ...i, owned: ownedIds.includes(i.id) })));
+          }
         }
       } else {
         console.error('Failed to fetch user profile:', response.status);
@@ -534,16 +541,32 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         }
         return updated;
       });
-      setShopItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, owned: true } : i)));
-      setActivities((prev) => [
-        {
-          id: Date.now().toString(),
-          label: `Acheté : ${item.name}`,
-          points: -item.price,
-          type: 'purchase',
-        },
-        ...prev.slice(0, 4),
-      ]);
+
+      setShopItems((prev) => {
+        const updated = prev.map((i) => (i.id === itemId ? { ...i, owned: true } : i));
+        // Persist purchased item IDs in localStorage
+        if (user && Platform.OS === 'web') {
+          const ownedIds = updated.filter((i) => i.owned).map((i) => i.id);
+          localStorage.setItem(`purchases_${user.email}`, JSON.stringify(ownedIds));
+        }
+        return updated;
+      });
+
+      setActivities((prev) => {
+        const updated = [
+          {
+            id: Date.now().toString(),
+            label: `Acheté : ${item.name}`,
+            points: -item.price,
+            type: 'purchase' as const,
+          },
+          ...prev.slice(0, 4),
+        ];
+        if (user && Platform.OS === 'web') {
+          localStorage.setItem(`activities_${user.email}`, JSON.stringify(updated));
+        }
+        return updated;
+      });
 
       let message = `${item.name} a été ajouté à ton inventaire.`;
       if (item.category === 'ingredients') message += ' Retrouve-le dans l\'écran de jeu.';
