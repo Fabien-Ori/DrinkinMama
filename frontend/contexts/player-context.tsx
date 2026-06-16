@@ -78,6 +78,7 @@ interface PlayerContextValue {
   logout: () => void;
   badges: Badge[];
   loadingAuth: boolean;
+  setPlayerRank: (rank: string) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -281,6 +282,27 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           }
           setPlayer(resolvedPlayer);
           localStorage.setItem(`player_${data.email}`, JSON.stringify(resolvedPlayer));
+
+          // Compute global rank from the users list
+          fetch(`${BASE_API_URL}/users`, {
+            headers: { 'Authorization': `Bearer ${jwtToken}`, 'Content-Type': 'application/json' },
+          }).then(async (rankRes) => {
+            if (rankRes.ok) {
+              const rankData = await rankRes.json();
+              const allUsers = rankData._embedded?.userResponses || [];
+              const sorted = allUsers
+                .map((u: any) => ({
+                  id: u.id,
+                  email: u.email,
+                  score: (u.score && u.score > 0) ? u.score : (u.coins ?? 0),
+                }))
+                .sort((a: any, b: any) => b.score - a.score);
+              const myRankIdx = sorted.findIndex((u: any) => u.email === data.email || u.id === data.id);
+              if (myRankIdx !== -1) {
+                setPlayer((prev) => ({ ...prev, globalRank: `#${myRankIdx + 1}` }));
+              }
+            }
+          }).catch(() => {});
 
           if (!hasDbStats || (data.coins === 0 && resolvedPlayer.coins > 0) || (data.score === undefined || data.score === null || (data.score === 0 && resolvedPlayer.score > 0))) {
             fetch(`${BASE_API_URL}/users/me/stats`, {
@@ -559,6 +581,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       logout,
       badges,
       loadingAuth,
+      setPlayerRank: (rank: string) => setPlayer((prev) => ({ ...prev, globalRank: rank })),
     }),
     [
       player,

@@ -2,6 +2,8 @@ export type ToolId = 'glass' | 'shaker' | 'mortar' | 'golden-shaker';
 export type IngredientId =
   | 'mint'
   | 'rum'
+  | 'vodka'
+  | 'whisky'
   | 'lemon'
   | 'ice'
   | 'syrup'
@@ -95,6 +97,8 @@ export const BASE_TOOLS: GameTool[] = [
 export const BASE_INGREDIENTS: GameIngredient[] = [
   { id: 'mint', label: 'Menthe', icon: 'eco' },
   { id: 'rum', label: 'Rhum', icon: 'water-drop' },
+  { id: 'vodka', label: 'Vodka', icon: 'wine-bar' },
+  { id: 'whisky', label: 'Whisky', icon: 'sports-bar' },
   { id: 'lemon', label: 'Citron', icon: 'brightness-5' },
   { id: 'ice', label: 'Glaçons', icon: 'ac-unit' },
   { id: 'syrup', label: 'Sirop', icon: 'spa' },
@@ -163,7 +167,7 @@ export const COCKTAILS: Cocktail[] = [
     stars: 2,
     locked: false,
     recipe: [
-      { id: 1, label: 'Verser la vodka', points: 40, tool: 'glass', ingredient: 'rum' },
+      { id: 1, label: 'Verser la vodka', points: 40, tool: 'glass', ingredient: 'vodka' },
       { id: 2, label: 'Ajouter le citron', points: 30, tool: 'glass', ingredient: 'lemon' },
       { id: 3, label: 'Shaker avec glace', points: 40, tool: 'shaker', ingredient: 'ice' },
       { id: 4, label: 'Servir en coupe', points: 30, tool: 'glass' },
@@ -179,7 +183,7 @@ export const COCKTAILS: Cocktail[] = [
     stars: 1,
     locked: false,
     recipe: [
-      { id: 1, label: 'Verser le whisky', points: 40, tool: 'glass', ingredient: 'rum' },
+      { id: 1, label: 'Verser le whisky', points: 40, tool: 'glass', ingredient: 'whisky' },
       { id: 2, label: 'Presser le citron', points: 30, tool: 'mortar', ingredient: 'lemon' },
       { id: 3, label: 'Ajouter le sirop', points: 20, tool: 'glass', ingredient: 'syrup' },
       { id: 4, label: 'Shaker & filtrer', points: 30, tool: 'shaker' },

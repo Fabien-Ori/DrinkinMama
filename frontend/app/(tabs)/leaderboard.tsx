@@ -20,7 +20,7 @@ interface LeaderboardPlayer {
 
 export default function LeaderboardScreen() {
   const router = useRouter();
-  const { player, token, user } = usePlayer();
+  const { player, token, user, setPlayerRank } = usePlayer();
   const [usersList, setUsersList] = useState<LeaderboardPlayer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,11 +44,13 @@ export default function LeaderboardScreen() {
           const sorted = userResponses
             .map((u: any) => {
               const isCurrentUser = user && (u.email === user.email || u.id === user.id);
+              // Fallback: use coins if score is 0 (legacy accounts before score column was added)
+              const effectiveScore = (u.score && u.score > 0) ? u.score : (u.coins ?? 0);
               return {
                 rank: 0,
                 initials: isCurrentUser ? player.initials : (u.username ? u.username.slice(0, 2).toUpperCase() : 'JD'),
                 name: isCurrentUser ? player.name : (u.username || 'Joueur'),
-                score: isCurrentUser ? player.score : (u.score ?? 0),
+                score: isCurrentUser ? player.score : effectiveScore,
                 isMe: isCurrentUser,
                 avatarBg: isCurrentUser ? DM.purpleDark : '#1a0d1e',
                 avatarColor: isCurrentUser ? DM.purple : '#cd7f32',
@@ -58,6 +60,12 @@ export default function LeaderboardScreen() {
             .map((u: any, idx: number) => ({ ...u, rank: idx + 1 }));
 
           setUsersList(sorted);
+
+          // Update the player's global rank in the context
+          const myEntry = sorted.find((p: any) => p.isMe);
+          if (myEntry && setPlayerRank) {
+            setPlayerRank(`#${myEntry.rank}`);
+          }
         }
       } catch (err) {
         console.error('Error fetching users for leaderboard:', err);
@@ -67,7 +75,7 @@ export default function LeaderboardScreen() {
     };
 
     fetchLeaderboard();
-  }, [token, player.name, player.initials, player.score, user, BASE_API_URL]);
+  }, [token, player.name, player.initials, player.score, user, setPlayerRank, BASE_API_URL]);
 
   const podiumList = usersList.slice(0, 3);
   const podiumSlots: LeaderboardPlayer[] = [];
