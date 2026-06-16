@@ -47,7 +47,12 @@ public class User implements UserDetails {
     @Builder.Default
     private Integer coins = 0;
 
+    @Column(name = "score")
+    @Builder.Default
+    private Integer score = 0;
+
     @Column(name = "level")
+
     @Builder.Default
     private Integer level = 1;
 
@@ -77,6 +82,10 @@ public class User implements UserDetails {
 
     public Integer getCoins() {
         return coins == null ? 0 : coins;
+    }
+
+    public Integer getScore() {
+        return score == null ? 0 : score;
     }
 
     public Integer getLevel() {

@@ -48,7 +48,7 @@ export default function LeaderboardScreen() {
                 rank: 0,
                 initials: isCurrentUser ? player.initials : (u.username ? u.username.slice(0, 2).toUpperCase() : 'JD'),
                 name: isCurrentUser ? player.name : (u.username || 'Joueur'),
-                score: isCurrentUser ? player.coins : (u.coins ?? 0),
+                score: isCurrentUser ? player.score : (u.score ?? 0),
                 isMe: isCurrentUser,
                 avatarBg: isCurrentUser ? DM.purpleDark : '#1a0d1e',
                 avatarColor: isCurrentUser ? DM.purple : '#cd7f32',
@@ -67,7 +67,7 @@ export default function LeaderboardScreen() {
     };
 
     fetchLeaderboard();
-  }, [token, player.name, player.initials, player.coins, user, BASE_API_URL]);
+  }, [token, player.name, player.initials, player.score, user, BASE_API_URL]);
 
   const podiumList = usersList.slice(0, 3);
   const podiumSlots: LeaderboardPlayer[] = [];

@@ -19,6 +19,7 @@ public class UserResponse {
     private String biography;
     private String userImage;
     private Integer coins;
+    private Integer score;
     private Integer level;
     private Integer xp;
     private Integer xpMax;
@@ -37,6 +38,7 @@ public class UserResponse {
                 .biography(user.getBiography())
                 .userImage(user.getUserImage())
                 .coins(user.getCoins())
+                .score(user.getScore())
                 .level(user.getLevel())
                 .xp(user.getXp())
                 .xpMax(user.getXpMax())

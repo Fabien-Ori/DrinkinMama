@@ -138,6 +138,7 @@ public class UserService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + email));
 
             if (request.getCoins() != null) existingUser.setCoins(request.getCoins());
+            if (request.getScore() != null) existingUser.setScore(request.getScore());
             if (request.getLevel() != null) existingUser.setLevel(request.getLevel());
             if (request.getXp() != null) existingUser.setXp(request.getXp());
             if (request.getXpMax() != null) existingUser.setXpMax(request.getXpMax());

@@ -27,6 +27,7 @@ interface PlayerState {
   rank: string;
   rankTitle: string;
   coins: number;
+  score: number;
   level: number;
   xp: number;
   xpMax: number;
@@ -87,6 +88,7 @@ const INITIAL_PLAYER: PlayerState = {
   rank: '#42',
   rankTitle: 'Maître Mixologue',
   coins: 1240,
+  score: 1240,
   level: 7,
   xp: 6200,
   xpMax: 10000,
@@ -231,13 +233,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           const savedPlayerStr = localStorage.getItem(`player_${data.email}`);
           
           let resolvedPlayer: PlayerState;
-          if (hasDbStats && (data.coins > 0 || data.level > 1 || data.xp > 0)) {
+          if (hasDbStats && (data.coins > 0 || data.level > 1 || data.xp > 0 || (data.score !== undefined && data.score > 0))) {
             resolvedPlayer = {
               name: data.username,
               initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
               rank: '#Unranked',
               rankTitle: data.rankTitle || 'Apprenti Mixologue',
               coins: data.coins,
+              score: data.score !== undefined && data.score !== null ? data.score : data.coins,
               level: data.level,
               xp: data.xp,
               xpMax: data.xpMax || 1000,
@@ -255,6 +258,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             resolvedPlayer = JSON.parse(savedPlayerStr);
             resolvedPlayer.name = data.username;
             resolvedPlayer.initials = data.username ? data.username.slice(0, 2).toUpperCase() : 'JD';
+            if (resolvedPlayer.score === undefined || resolvedPlayer.score === null) {
+              resolvedPlayer.score = resolvedPlayer.coins;
+            }
           } else {
             resolvedPlayer = {
               name: data.username,
@@ -262,6 +268,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               rank: '#Unranked',
               rankTitle: 'Apprenti Mixologue',
               coins: 0,
+              score: 0,
               level: 1,
               xp: 0,
               xpMax: 1000,
@@ -275,7 +282,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           setPlayer(resolvedPlayer);
           localStorage.setItem(`player_${data.email}`, JSON.stringify(resolvedPlayer));
 
-          if (!hasDbStats || (data.coins === 0 && resolvedPlayer.coins > 0)) {
+          if (!hasDbStats || (data.coins === 0 && resolvedPlayer.coins > 0) || (data.score === undefined || data.score === null || (data.score === 0 && resolvedPlayer.score > 0))) {
             fetch(`${BASE_API_URL}/users/me/stats`, {
               method: 'PATCH',
               headers: {
@@ -284,6 +291,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               },
               body: JSON.stringify({
                 coins: resolvedPlayer.coins,
+                score: resolvedPlayer.score,
                 level: resolvedPlayer.level,
                 xp: resolvedPlayer.xp,
                 xpMax: resolvedPlayer.xpMax,
@@ -334,6 +342,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         },
         body: JSON.stringify({
           coins: updatedPlayer.coins,
+          score: updatedPlayer.score,
           level: updatedPlayer.level,
           xp: updatedPlayer.xp,
           xpMax: updatedPlayer.xpMax,
@@ -399,6 +408,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const updated = {
         ...prev,
         coins: prev.coins + totalPoints,
+        score: (prev.score ?? prev.coins) + totalPoints,
         xp: Math.min(prev.xp + totalPoints, prev.xpMax),
         cocktailsCompleted: prev.cocktailsCompleted + 1,
       };

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserGameStatsRequest {
     private Integer coins;
+    private Integer score;
     private Integer level;
     private Integer xp;
     private Integer xpMax;
