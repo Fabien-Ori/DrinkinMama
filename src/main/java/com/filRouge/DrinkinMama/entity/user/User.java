@@ -43,6 +43,34 @@ public class User implements UserDetails {
     @Column(name = "role", length = 50)
     private Role role;
 
+    @Column(name = "coins", nullable = false)
+    @Builder.Default
+    private Integer coins = 0;
+
+    @Column(name = "level", nullable = false)
+    @Builder.Default
+    private Integer level = 1;
+
+    @Column(name = "xp", nullable = false)
+    @Builder.Default
+    private Integer xp = 0;
+
+    @Column(name = "xp_max", nullable = false)
+    @Builder.Default
+    private Integer xpMax = 1000;
+
+    @Column(name = "streak", nullable = false)
+    @Builder.Default
+    private Integer streak = 0;
+
+    @Column(name = "cocktails_completed", nullable = false)
+    @Builder.Default
+    private Integer cocktailsCompleted = 0;
+
+    @Column(name = "rank_title", length = 100)
+    @Builder.Default
+    private String rankTitle = "Apprenti Mixologue";
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuthProvider provider;

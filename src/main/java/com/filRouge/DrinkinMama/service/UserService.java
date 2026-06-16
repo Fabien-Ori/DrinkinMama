@@ -7,6 +7,7 @@ import com.filRouge.DrinkinMama.entity.user.Role;
 import com.filRouge.DrinkinMama.repository.UserRepository;
 import com.filRouge.DrinkinMama.entity.user.User;
 import com.filRouge.DrinkinMama.DTO.UserResponse;
+import com.filRouge.DrinkinMama.DTO.UserGameStatsRequest;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -120,6 +121,40 @@ public class UserService {
             throw e;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while updating profile", e);
+        }
+    }
+
+    /**
+     * Updates the game statistics of the currently authenticated user.
+     *
+     * @param request the stats to update
+     * @return an {@link EntityModel} containing the updated user profile
+     */
+    public EntityModel<UserResponse> updateCurrentUserStats(UserGameStatsRequest request) {
+        try {
+            String email = getCurrentUserEmail();
+
+            User existingUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + email));
+
+            if (request.getCoins() != null) existingUser.setCoins(request.getCoins());
+            if (request.getLevel() != null) existingUser.setLevel(request.getLevel());
+            if (request.getXp() != null) existingUser.setXp(request.getXp());
+            if (request.getXpMax() != null) existingUser.setXpMax(request.getXpMax());
+            if (request.getStreak() != null) existingUser.setStreak(request.getStreak());
+            if (request.getCocktailsCompleted() != null) existingUser.setCocktailsCompleted(request.getCocktailsCompleted());
+            if (request.getRankTitle() != null) existingUser.setRankTitle(request.getRankTitle());
+
+            User updatedUser = userRepository.save(existingUser);
+            UserResponse response = UserResponse.fromEntity(updatedUser);
+
+            return EntityModel.of(response,
+                    linkTo(methodOn(UserController.class).getCurrentUserProfile()).withSelfRel());
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while updating user stats", e);
         }
     }
 

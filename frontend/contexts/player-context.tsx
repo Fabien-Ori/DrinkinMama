@@ -110,7 +110,7 @@ function buildAvailableIngredients(shopItems: ShopItem[], baseIngredients: GameI
     .map((item) => {
       const def = SHOP_INGREDIENT_DEFS[item.id];
       if (!def) return null;
-      return { ...def, fromShop: true };
+      return { ...def, fromShop: true } as GameIngredient;
     })
     .filter((item): item is GameIngredient => item !== null);
 
@@ -124,7 +124,7 @@ function buildAvailableTools(shopItems: ShopItem[], baseTools: GameTool[]): Game
     .map((item) => {
       const def = SHOP_TOOL_DEFS[item.gameToolId!];
       if (!def) return null;
-      return { ...def, fromShop: true };
+      return { ...def, fromShop: true } as GameTool;
     })
     .filter((item): item is GameTool => item !== null);
 
@@ -210,6 +210,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('jwt_token');
     }
     setPlayer(INITIAL_PLAYER);
+    setActivities(ACTIVITIES);
   }, []);
 
   const fetchUserProfile = useCallback(async (jwtToken: string) => {
@@ -224,11 +225,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
         setUser(data);
         if (Platform.OS === 'web') {
+          const hasDbStats = data.coins !== undefined && data.coins !== null;
           const savedPlayerStr = localStorage.getItem(`player_${data.email}`);
-          if (savedPlayerStr) {
-            setPlayer(JSON.parse(savedPlayerStr));
+          
+          let resolvedPlayer: PlayerState;
+          if (hasDbStats && (data.coins > 0 || data.level > 1 || data.xp > 0)) {
+            resolvedPlayer = {
+              name: data.username,
+              initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
+              rank: '#Unranked',
+              rankTitle: data.rankTitle || 'Apprenti Mixologue',
+              coins: data.coins,
+              level: data.level,
+              xp: data.xp,
+              xpMax: data.xpMax || 1000,
+              mixodexUnlocked: 0,
+              mixodexTotal: 48,
+              streak: data.streak || 0,
+              globalRank: '#Unranked',
+              cocktailsCompleted: data.cocktailsCompleted || 0,
+            };
+            if (savedPlayerStr) {
+              const localPlayer = JSON.parse(savedPlayerStr);
+              resolvedPlayer.mixodexUnlocked = localPlayer.mixodexUnlocked;
+            }
+          } else if (savedPlayerStr) {
+            resolvedPlayer = JSON.parse(savedPlayerStr);
+            resolvedPlayer.name = data.username;
+            resolvedPlayer.initials = data.username ? data.username.slice(0, 2).toUpperCase() : 'JD';
           } else {
-            const newPlayer: PlayerState = {
+            resolvedPlayer = {
               name: data.username,
               initials: data.username ? data.username.slice(0, 2).toUpperCase() : 'JD',
               rank: '#Unranked',
@@ -243,8 +269,35 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               globalRank: '#Unranked',
               cocktailsCompleted: 0,
             };
-            setPlayer(newPlayer);
-            localStorage.setItem(`player_${data.email}`, JSON.stringify(newPlayer));
+          }
+          setPlayer(resolvedPlayer);
+          localStorage.setItem(`player_${data.email}`, JSON.stringify(resolvedPlayer));
+
+          if (!hasDbStats || (data.coins === 0 && resolvedPlayer.coins > 0)) {
+            fetch(`${BASE_API_URL}/users/me/stats`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                coins: resolvedPlayer.coins,
+                level: resolvedPlayer.level,
+                xp: resolvedPlayer.xp,
+                xpMax: resolvedPlayer.xpMax,
+                streak: resolvedPlayer.streak,
+                cocktailsCompleted: resolvedPlayer.cocktailsCompleted,
+                rankTitle: resolvedPlayer.rankTitle,
+              }),
+            }).catch(e => console.error("Initial stats sync failed", e));
+          }
+
+          const savedActivitiesStr = localStorage.getItem(`activities_${data.email}`);
+          if (savedActivitiesStr) {
+            setActivities(JSON.parse(savedActivitiesStr));
+          } else {
+            setActivities([]);
+            localStorage.setItem(`activities_${data.email}`, JSON.stringify([]));
           }
         }
       } else {
@@ -266,6 +319,30 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     await fetchUserProfile(jwtToken);
   }, [fetchUserProfile]);
 
+  const syncPlayerStats = useCallback(async (updatedPlayer: PlayerState) => {
+    if (!token || !user) return;
+    try {
+      await fetch(`${BASE_API_URL}/users/me/stats`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          coins: updatedPlayer.coins,
+          level: updatedPlayer.level,
+          xp: updatedPlayer.xp,
+          xpMax: updatedPlayer.xpMax,
+          streak: updatedPlayer.streak,
+          cocktailsCompleted: updatedPlayer.cocktailsCompleted,
+          rankTitle: updatedPlayer.rankTitle,
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to sync player stats with DB:', err);
+    }
+  }, [token, user]);
+
   useEffect(() => {
     if (Platform.OS === 'web') {
       const storedToken = localStorage.getItem('jwt_token');
@@ -274,6 +351,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [login]);
+
+  useEffect(() => {
+    if (user && Platform.OS === 'web') {
+      localStorage.setItem(`activities_${user.email}`, JSON.stringify(activities));
+    }
+  }, [activities, user]);
 
   const cocktails = useMemo(() => applyCocktailUnlocks(shopItems, cocktailsList), [shopItems, cocktailsList]);
   const dailyCocktail = cocktails.find((c) => c.id === 'mojito-passion') ?? cocktails[0];
@@ -309,9 +392,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         coins: prev.coins + totalPoints,
         xp: Math.min(prev.xp + totalPoints, prev.xpMax),
+        cocktailsCompleted: prev.cocktailsCompleted + 1,
       };
+      
+      // XP Level Up logic
+      if (updated.xp >= updated.xpMax) {
+        updated.level += 1;
+        updated.xp = updated.xp - updated.xpMax;
+        updated.xpMax = updated.level * 1000;
+        updated.rankTitle = updated.level >= 5 ? 'Maître Mixologue' : 'Mixologue';
+      }
+
       if (user && Platform.OS === 'web') {
         localStorage.setItem(`player_${user.email}`, JSON.stringify(updated));
+        syncPlayerStats(updated);
       }
       return updated;
     });
@@ -326,7 +420,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     ]);
     showAlert('Bravo ! 🍹', `${cocktail.name} terminé ! +${totalPoints} pts`);
     setGameSession(null);
-  }, [user]);
+  }, [user, syncPlayerStats]);
 
   const performAction = useCallback(() => {
     if (!gameSession) return false;
@@ -396,6 +490,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         const updated = { ...prev, coins: prev.coins - item.price };
         if (user && Platform.OS === 'web') {
           localStorage.setItem(`player_${user.email}`, JSON.stringify(updated));
+          syncPlayerStats(updated);
         }
         return updated;
       });

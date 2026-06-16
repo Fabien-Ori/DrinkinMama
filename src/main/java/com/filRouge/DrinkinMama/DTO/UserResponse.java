@@ -18,6 +18,13 @@ public class UserResponse {
     private Role role;
     private String biography;
     private String userImage;
+    private Integer coins;
+    private Integer level;
+    private Integer xp;
+    private Integer xpMax;
+    private Integer streak;
+    private Integer cocktailsCompleted;
+    private String rankTitle;
 
     public static UserResponse fromEntity(User user) {
 
@@ -29,6 +36,13 @@ public class UserResponse {
                 .role(user.getRole())
                 .biography(user.getBiography())
                 .userImage(user.getUserImage())
+                .coins(user.getCoins())
+                .level(user.getLevel())
+                .xp(user.getXp())
+                .xpMax(user.getXpMax())
+                .streak(user.getStreak())
+                .cocktailsCompleted(user.getCocktailsCompleted())
+                .rankTitle(user.getRankTitle())
                 .build();
     }
 

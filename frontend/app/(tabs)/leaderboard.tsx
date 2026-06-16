@@ -1,20 +1,103 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
 
 import { DM } from '@/constants/dm-theme';
-import { LEADERBOARD_LIST, PODIUM } from '@/constants/mock-data';
 import { usePlayer } from '@/contexts/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
+interface LeaderboardPlayer {
+  rank: number;
+  initials: string;
+  name: string;
+  score: number;
+  isMe?: boolean;
+  avatarBg?: string;
+  avatarColor?: string;
+}
+
 export default function LeaderboardScreen() {
   const router = useRouter();
-  const { player } = usePlayer();
+  const { player, token } = usePlayer();
+  const [usersList, setUsersList] = useState<LeaderboardPlayer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const meEntry = LEADERBOARD_LIST.find((p) => p.isMe);
-  const nextRankPlayer = LEADERBOARD_LIST.find((p) => p.rank === (meEntry?.rank ?? 42) - 1);
-  const pointsToNext = nextRankPlayer ? nextRankPlayer.score - player.coins + 320 : 320;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
+  const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_API_URL}/users`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          const userResponses = data._embedded?.userResponses || [];
+          
+          const sorted = userResponses
+            .map((u: any) => {
+              const isCurrentUser = u.email === player.name || u.username === player.name || u.username === player.initials;
+              return {
+                rank: 0,
+                initials: u.username ? u.username.slice(0, 2).toUpperCase() : 'JD',
+                name: u.username || 'Joueur',
+                score: u.coins ?? 0,
+                isMe: isCurrentUser,
+                avatarBg: isCurrentUser ? DM.purpleDark : '#1a0d1e',
+                avatarColor: isCurrentUser ? DM.purple : '#cd7f32',
+              };
+            })
+            .sort((a: any, b: any) => b.score - a.score)
+            .map((u: any, idx: number) => ({ ...u, rank: idx + 1 }));
+
+          setUsersList(sorted);
+        }
+      } catch (err) {
+        console.error('Error fetching users for leaderboard:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, [token, player.name, player.initials, BASE_API_URL]);
+
+  const podiumList = usersList.slice(0, 3);
+  const podiumSlots: LeaderboardPlayer[] = [];
+  
+  // 2nd Place
+  if (podiumList.length > 1) {
+    podiumSlots.push(podiumList[1]);
+  } else {
+    podiumSlots.push({ rank: 2, initials: '-', name: 'Aucun', score: 0 });
+  }
+  
+  // 1st Place
+  if (podiumList.length > 0) {
+    podiumSlots.push(podiumList[0]);
+  } else {
+    podiumSlots.push({ rank: 1, initials: '-', name: 'Aucun', score: 0 });
+  }
+  
+  // 3rd Place
+  if (podiumList.length > 2) {
+    podiumSlots.push(podiumList[2]);
+  } else {
+    podiumSlots.push({ rank: 3, initials: '-', name: 'Aucun', score: 0 });
+  }
+
+  const listItems = usersList.slice(3);
+
+  const meEntry = usersList.find((p) => p.isMe);
+  const nextRankPlayer = meEntry ? usersList.find((p) => p.rank === meEntry.rank - 1) : null;
+  const pointsToNext = nextRankPlayer && meEntry ? nextRankPlayer.score - meEntry.score : 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -23,93 +106,102 @@ export default function LeaderboardScreen() {
           <MaterialIcons name="arrow-back" size={22} color={DM.text} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.title}>Classement mondial</Text>
-          <Text style={styles.period}>Semaine du 9 au 13 juin 2026</Text>
+          <Text style={styles.title}>Classement</Text>
+          <Text style={styles.period}>Joueurs connectés</Text>
         </View>
         <View style={styles.backBtn} />
         <GlobalHeaderRight />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.podium}>
-          {PODIUM.map((slot, index) => {
-            const barHeights = [36, 52, 28];
-            const barColors = [DM.silver, DM.gold, DM.bronze];
-            const scoreColors = ['silver', 'gold', 'bronze'] as const;
-            const isFirst = slot.rank === 1;
-
-            return (
-              <View key={slot.initials} style={styles.podiumSlot}>
-                <View
-                  style={[
-                    styles.podiumAvatar,
-                    isFirst && styles.podiumAvatarFirst,
-                    {
-                      borderColor: barColors[index],
-                      backgroundColor: index === 0 ? '#FFFFFF' : index === 1 ? DM.goldDark : '#FBF8F1',
-                    },
-                  ]}>
-                  <Text style={[styles.podiumInitials, { color: barColors[index] }]}>{slot.initials}</Text>
-                </View>
-                <Text style={styles.podiumName}>{slot.name}</Text>
-                <View
-                  style={[
-                    styles.podiumBar,
-                    { height: barHeights[index], borderColor: barColors[index], backgroundColor: `${barColors[index]}22` },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.barScore,
-                    scoreColors[index] === 'gold' && { color: DM.gold },
-                    scoreColors[index] === 'silver' && { color: DM.silver },
-                    scoreColors[index] === 'bronze' && { color: DM.bronze },
-                  ]}>
-                  {slot.score.toLocaleString('fr-FR')} pts
-                </Text>
-              </View>
-            );
-          })}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={DM.gold} />
+          <Text style={styles.loadingText}>Chargement du classement...</Text>
         </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.podium}>
+            {podiumSlots.map((slot, index) => {
+              const barHeights = [36, 52, 28];
+              const barColors = [DM.silver, DM.gold, DM.bronze];
+              const scoreColors = ['silver', 'gold', 'bronze'] as const;
+              const isFirst = slot.rank === 1;
 
-        <View style={styles.list}>
-          {LEADERBOARD_LIST.map((entry) => (
-            <View key={entry.rank} style={[styles.row, entry.isMe && styles.rowMe]}>
-              <Text style={[styles.rank, entry.isMe && { color: DM.purple }]}>{entry.rank}</Text>
-              <View
-                style={[
-                  styles.playerAvatar,
-                  entry.avatarBg && { backgroundColor: entry.avatarBg },
-                ]}>
-                <Text style={[styles.playerInitials, entry.avatarColor && { color: entry.avatarColor }]}>
-                  {entry.initials}
+              return (
+                <View key={index} style={styles.podiumSlot}>
+                  <View
+                    style={[
+                      styles.podiumAvatar,
+                      isFirst && styles.podiumAvatarFirst,
+                      {
+                        borderColor: barColors[index],
+                        backgroundColor: index === 0 ? '#FFFFFF' : index === 1 ? DM.goldDark : '#FBF8F1',
+                      },
+                    ]}>
+                    <Text style={[styles.podiumInitials, { color: barColors[index] }]}>{slot.initials}</Text>
+                  </View>
+                  <Text style={styles.podiumName}>{slot.name}</Text>
+                  <View
+                    style={[
+                      styles.podiumBar,
+                      { height: barHeights[index], borderColor: barColors[index], backgroundColor: `${barColors[index]}22` },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.barScore,
+                      scoreColors[index] === 'gold' && { color: DM.gold },
+                      scoreColors[index] === 'silver' && { color: DM.silver },
+                      scoreColors[index] === 'bronze' && { color: DM.bronze },
+                    ]}>
+                    {slot.score.toLocaleString('fr-FR')} pts
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={styles.list}>
+            {listItems.map((entry) => (
+              <View key={entry.rank} style={[styles.row, entry.isMe && styles.rowMe]}>
+                <Text style={[styles.rank, entry.isMe && { color: DM.purple }]}>{entry.rank}</Text>
+                <View
+                  style={[
+                    styles.playerAvatar,
+                    entry.avatarBg && { backgroundColor: entry.avatarBg },
+                  ]}>
+                  <Text style={[styles.playerInitials, entry.avatarColor && { color: entry.avatarColor }]}>
+                    {entry.initials}
+                  </Text>
+                </View>
+                <Text style={[styles.playerName, entry.isMe && { color: DM.purple }]}>
+                  {entry.name}
+                  {entry.isMe && <Text style={styles.meTag}> Vous</Text>}
                 </Text>
+                <View style={styles.scoreCol}>
+                  <Text style={[styles.playerScore, entry.isMe && { color: DM.purple }]}>
+                    {entry.score.toLocaleString('fr-FR')}
+                  </Text>
+                  <Text style={styles.playerPts}>pts</Text>
+                </View>
               </View>
-              <Text style={[styles.playerName, entry.isMe && { color: DM.purple }]}>
-                {entry.name}
-                {entry.isMe && <Text style={styles.meTag}> Vous</Text>}
-              </Text>
-              <View style={styles.scoreCol}>
-                <Text style={[styles.playerScore, entry.isMe && { color: DM.purple }]}>
-                  {entry.score.toLocaleString('fr-FR')}
-                </Text>
-                <Text style={styles.playerPts}>pts</Text>
+            ))}
+          </View>
+
+          {meEntry && nextRankPlayer ? (
+            <View style={styles.nextRankCard}>
+              <View>
+                <Text style={styles.nextRankLabel}>Pour passer au rang</Text>
+                <Text style={styles.nextRankName}>#{nextRankPlayer.rank} — {nextRankPlayer.name}</Text>
+              </View>
+              <View style={styles.nextRankRight}>
+                <Text style={styles.nextRankPts}>+{pointsToNext} pts</Text>
+                <Text style={styles.nextRankSub}>à gagner</Text>
               </View>
             </View>
-          ))}
-        </View>
-
-        <View style={styles.nextRankCard}>
-          <View>
-            <Text style={styles.nextRankLabel}>Pour passer au rang</Text>
-            <Text style={styles.nextRankName}>#41 — TequilaTom</Text>
-          </View>
-          <View style={styles.nextRankRight}>
-            <Text style={styles.nextRankPts}>+{pointsToNext} pts</Text>
-            <Text style={styles.nextRankSub}>à gagner</Text>
-          </View>
-        </View>
-      </ScrollView>
+          ) : null}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -211,4 +303,6 @@ const styles = StyleSheet.create({
   nextRankRight: { alignItems: 'flex-end' },
   nextRankPts: { fontSize: 13, color: DM.gold, fontWeight: '500' },
   nextRankSub: { fontSize: 10, color: DM.muted },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, paddingVertical: 100 },
+  loadingText: { fontSize: 13, color: DM.muted },
 });

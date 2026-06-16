@@ -22,6 +22,7 @@ export interface Cocktail {
   id: string;
   name: string;
   emoji: string;
+  imageUrl?: string;
   thumbClass: 'c1' | 'c2' | 'c3' | 'c4';
   points: number;
   level: number;
@@ -35,7 +36,7 @@ export interface ShopItem {
   id: string;
   name: string;
   description: string;
-  emoji: string;s
+  emoji: string;
   thumbBg: string;
   price: number;
   category: 'ingredients' | 'recipes' | 'utensils';

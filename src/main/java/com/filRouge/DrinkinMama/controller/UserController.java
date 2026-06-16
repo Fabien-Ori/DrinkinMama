@@ -6,6 +6,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 import com.filRouge.DrinkinMama.DTO.UserRequest;
 import com.filRouge.DrinkinMama.DTO.UserResponse;
+import com.filRouge.DrinkinMama.DTO.UserGameStatsRequest;
 import com.filRouge.DrinkinMama.service.UserService;
 
 
@@ -33,6 +34,11 @@ public class UserController {
     @PatchMapping("/me")
     public EntityModel<UserResponse> updateCurrentUser(@Valid @RequestBody UserRequest request) {
         return userService.updateCurrentUserProfile(request);
+    }
+
+    @PatchMapping("/me/stats")
+    public EntityModel<UserResponse> updateCurrentUserStats(@RequestBody UserGameStatsRequest request) {
+        return userService.updateCurrentUserStats(request);
     }
 
 
