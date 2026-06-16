@@ -31,7 +31,7 @@ public class UserResponse {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .username(user.getProfileUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .biography(user.getBiography())
