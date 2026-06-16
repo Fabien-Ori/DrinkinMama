@@ -43,27 +43,27 @@ public class User implements UserDetails {
     @Column(name = "role", length = 50)
     private Role role;
 
-    @Column(name = "coins", nullable = false)
+    @Column(name = "coins")
     @Builder.Default
     private Integer coins = 0;
 
-    @Column(name = "level", nullable = false)
+    @Column(name = "level")
     @Builder.Default
     private Integer level = 1;
 
-    @Column(name = "xp", nullable = false)
+    @Column(name = "xp")
     @Builder.Default
     private Integer xp = 0;
 
-    @Column(name = "xp_max", nullable = false)
+    @Column(name = "xp_max")
     @Builder.Default
     private Integer xpMax = 1000;
 
-    @Column(name = "streak", nullable = false)
+    @Column(name = "streak")
     @Builder.Default
     private Integer streak = 0;
 
-    @Column(name = "cocktails_completed", nullable = false)
+    @Column(name = "cocktails_completed")
     @Builder.Default
     private Integer cocktailsCompleted = 0;
 
@@ -74,6 +74,34 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuthProvider provider;
+
+    public Integer getCoins() {
+        return coins == null ? 0 : coins;
+    }
+
+    public Integer getLevel() {
+        return level == null ? 1 : level;
+    }
+
+    public Integer getXp() {
+        return xp == null ? 0 : xp;
+    }
+
+    public Integer getXpMax() {
+        return xpMax == null ? 1000 : xpMax;
+    }
+
+    public Integer getStreak() {
+        return streak == null ? 0 : streak;
+    }
+
+    public Integer getCocktailsCompleted() {
+        return cocktailsCompleted == null ? 0 : cocktailsCompleted;
+    }
+
+    public String getRankTitle() {
+        return rankTitle == null ? "Apprenti Mixologue" : rankTitle;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
