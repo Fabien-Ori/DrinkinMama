@@ -26,16 +26,7 @@ export default function HomeScreen() {
     return cocktails[index];
   }, [cocktails]);
 
-  // Vérification de la connexion au chargement
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      const token = localStorage.getItem('jwt_token');
-      // Si pas de token, on redirige vers l'écran de connexion
-      if (!token) {
-        router.replace('/authentification');
-      }
-    }
-  }, [router]);
+
 
   const handlePlay = () => {
     if (cocktailDuJour) {

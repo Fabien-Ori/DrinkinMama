@@ -12,17 +12,12 @@ export default function LoginScreen() {
     const { login } = usePlayer();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    // État pour stocker et afficher l'erreur visuelle sur l'écran
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleLogin = async () => {
-        // Réinitialisation de l'erreur à chaque nouvelle tentative
         setErrorMessage('');
 
         try {
-            // .trim() supprime les espaces invisibles en début/fin
-            // .toLowerCase() évite les conflits avec les majuscules automatiques des claviers
             const cleanEmail = email.trim().toLowerCase();
             const cleanPassword = password.trim();
 
@@ -37,7 +32,6 @@ export default function LoginScreen() {
                 }),
             });
 
-            // Si le serveur Spring Boot renvoie une erreur (Ex: code 403, 404, etc.)
             if (!response.ok) {
                 try {
                     const errorData = await response.json();
@@ -48,21 +42,15 @@ export default function LoginScreen() {
                 return;
             }
 
-            // Si la réponse est OK (Status 200), on récupère le JSON contenant le token JWT
             const data = await response.json();
             console.log('Connexion réussie, Token JWT :', data.token);
 
-            // Connexion dans le contexte global (charge aussi le profil)
             await login(data.token);
 
-            // GESTION DE L'ALERTE DE SUCCÈS COMPATIBLE WEB ET MOBILE
             if (Platform.OS === 'web') {
-                // Alerte classique pour navigateur web
                 alert("Connexion Réussie ! Votre Token JWT a bien été généré par l'API.");
-                // Redirection immédiate vers la page d'accueil
                 router.push('/');
             } else {
-                // Boîte de dialogue native pour iOS / Android
                 Alert.alert(
                     "Connexion Réussie !",
                     "Votre Token JWT a bien été généré par l'API.",
@@ -79,7 +67,6 @@ export default function LoginScreen() {
 
         } catch (error) {
             console.error('Erreur lors de la requête :', error);
-            // Erreur déclenchée si le serveur Spring Boot est éteint ou inaccessible
             setErrorMessage("Impossible de joindre le serveur. Vérifiez que votre API Spring Boot est lancée.");
         }
     };
@@ -141,7 +128,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: DM.bg, // Utilise maintenant le blanc cassé chic
+        backgroundColor: DM.bg,
     },
     formContainer: {
         width: '100%',

@@ -1,9 +1,20 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { DM } from '@/constants/dm-theme';
+import { usePlayer } from '@/contexts/player-context';
 
 export default function TabLayout() {
+  const { token, loadingAuth } = usePlayer();
+
+  if (loadingAuth) {
+    return null;
+  }
+
+  if (!token) {
+    return <Redirect href="/authentification" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -57,8 +68,6 @@ export default function TabLayout() {
       />
       {/* <Tabs.Screen name="shop" options={{ href: null }} /> */}
       <Tabs.Screen name="leaderboard" options={{ href: null }} />
-      <Tabs.Screen name="authentification" options={{ href: null }} />
-      <Tabs.Screen name="register" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );

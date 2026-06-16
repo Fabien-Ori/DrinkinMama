@@ -17,11 +17,9 @@ export default function RegisterScreen() {
     const [successMessage, setSuccessMessage] = useState('');
 
     const handleRegister = async () => {
-        // Réinitialisation des messages avant chaque tentative
         setErrorMessage('');
         setSuccessMessage('');
 
-        // Validation simple des champs côté client
         if (!username.trim() || !email.trim() || !password.trim()) {
             setErrorMessage("Veuillez remplir tous les champs.");
             return;
@@ -44,22 +42,18 @@ export default function RegisterScreen() {
                 }),
             });
 
-            // Si le serveur Spring Boot renvoie une erreur (ex: Email déjà utilisé)
             if (!response.ok) {
                 try {
                     const errorData = await response.json();
                     setErrorMessage(errorData.message || "Impossible de créer le compte. Vérifiez vos informations.");
                 } catch {
-                    // AJOUT : Affiche le code d'erreur HTTP exact (ex: 400, 403, 415)
                     setErrorMessage(`Erreur serveur : Code ${response.status} (${response.statusText})`);
                 }
                 return;
             }
 
-            // Inscription réussie
             setSuccessMessage("Compte créé avec succès !");
 
-            // Gestion de la notification et de la redirection automatique
             if (Platform.OS === 'web') {
                 alert("Votre compte a été créé avec succès ! Redirection vers la page de connexion.");
                 router.push('/authentification');
@@ -87,7 +81,6 @@ export default function RegisterScreen() {
             <Text style={styles.title}>Créer un compte</Text>
             <Text style={styles.subtitle}>Rejoignez l'aventure Drinking Mama</Text>
 
-            {/* Affichage des bandeaux d'erreur ou de succès */}
             {errorMessage ? (
                 <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
@@ -125,7 +118,6 @@ export default function RegisterScreen() {
                 <Text style={styles.buttonText}>S'inscrire</Text>
             </TouchableOpacity>
 
-            {/* LIEN DE RETOUR : Permet de revenir à la page de connexion */}
             <TouchableOpacity
                 style={styles.linkButton}
                 onPress={() => router.push('/authentification')}
@@ -170,7 +162,7 @@ const styles = StyleSheet.create({
     },
     successText: {
         color: DM.success,
-        backgroundColor: DM.successDark,
+        backgroundColor: '#FFF0ED', // Let's use a nice subtle red/rose or custom success bg
         padding: 10,
         borderRadius: 5,
         marginBottom: 15,

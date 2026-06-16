@@ -76,6 +76,7 @@ interface PlayerContextValue {
   login: (token: string) => Promise<void>;
   logout: () => void;
   badges: Badge[];
+  loadingAuth: boolean;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -159,6 +160,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<DbUser | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
   const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
@@ -308,6 +310,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error('Error fetching user profile:', err);
+    } finally {
+      setLoadingAuth(false);
     }
   }, [logout]);
 
@@ -348,7 +352,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const storedToken = localStorage.getItem('jwt_token');
       if (storedToken) {
         login(storedToken);
+      } else {
+        setLoadingAuth(false);
       }
+    } else {
+      setLoadingAuth(false);
     }
   }, [login]);
 
@@ -540,6 +548,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       badges,
+      loadingAuth,
     }),
     [
       player,
@@ -562,6 +571,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       badges,
+      loadingAuth,
     ],
   );
 
