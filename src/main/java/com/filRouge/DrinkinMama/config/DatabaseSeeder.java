@@ -23,6 +23,10 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // Always run migrations (safe upserts for new ingredients and recipe fixes)
+        migrateIngredients();
+        migrateRecipeSteps();
+
         if (cocktailRepository.count() == 0) {
             seedIngredients();
             seedTools();
@@ -33,10 +37,50 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
     }
 
+    /** Adds missing base ingredients (vodka, whisky) if not already in DB */
+    private void migrateIngredients() {
+        if (!ingredientRepository.existsById("vodka")) {
+            ingredientRepository.save(Ingredient.builder().id("vodka").label("Vodka").icon("wine-bar").fromShop(false).build());
+            System.out.println(">>> Migrated: added vodka ingredient");
+        }
+        if (!ingredientRepository.existsById("whisky")) {
+            ingredientRepository.save(Ingredient.builder().id("whisky").label("Whisky").icon("sports-bar").fromShop(false).build());
+            System.out.println(">>> Migrated: added whisky ingredient");
+        }
+    }
+
+    /** Fixes recipe steps that incorrectly used 'rum' instead of 'vodka'/'whisky' */
+    private void migrateRecipeSteps() {
+        // Fix Cosmopolitan step 1: ingredient should be 'vodka' not 'rum'
+        cocktailRepository.findById("cosmopolitan").ifPresent(cosmo -> {
+            cosmo.getRecipe().stream()
+                .filter(step -> step.getStepId() == 1 && "rum".equals(step.getIngredient()))
+                .findFirst()
+                .ifPresent(step -> {
+                    step.setIngredient("vodka");
+                    cocktailRepository.save(cosmo);
+                    System.out.println(">>> Migrated: fixed Cosmopolitan step 1 ingredient to vodka");
+                });
+        });
+        // Fix Whisky Sour step 1: ingredient should be 'whisky' not 'rum'
+        cocktailRepository.findById("whisky-sour").ifPresent(whiskyCocktail -> {
+            whiskyCocktail.getRecipe().stream()
+                .filter(step -> step.getStepId() == 1 && "rum".equals(step.getIngredient()))
+                .findFirst()
+                .ifPresent(step -> {
+                    step.setIngredient("whisky");
+                    cocktailRepository.save(whiskyCocktail);
+                    System.out.println(">>> Migrated: fixed Whisky Sour step 1 ingredient to whisky");
+                });
+        });
+    }
+
     private void seedIngredients() {
         ingredientRepository.saveAll(Arrays.asList(
                 Ingredient.builder().id("mint").label("Menthe").icon("eco").fromShop(false).build(),
                 Ingredient.builder().id("rum").label("Rhum").icon("water-drop").fromShop(false).build(),
+                Ingredient.builder().id("vodka").label("Vodka").icon("wine-bar").fromShop(false).build(),
+                Ingredient.builder().id("whisky").label("Whisky").icon("sports-bar").fromShop(false).build(),
                 Ingredient.builder().id("lemon").label("Citron").icon("brightness-5").fromShop(false).build(),
                 Ingredient.builder().id("ice").label("Glaçons").icon("ac-unit").fromShop(false).build(),
                 Ingredient.builder().id("syrup").label("Sirop").icon("spa").fromShop(false).build(),
@@ -88,7 +132,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .locked(false)
                 .build();
         cosmo.setRecipe(Arrays.asList(
-                RecipeStep.builder().stepId(1).label("Verser la vodka").points(40).tool("glass").ingredient("rum").cocktail(cosmo).build(),
+                RecipeStep.builder().stepId(1).label("Verser la vodka").points(40).tool("glass").ingredient("vodka").cocktail(cosmo).build(),
                 RecipeStep.builder().stepId(2).label("Ajouter le citron").points(30).tool("glass").ingredient("lemon").cocktail(cosmo).build(),
                 RecipeStep.builder().stepId(3).label("Shaker avec glace").points(40).tool("shaker").ingredient("ice").cocktail(cosmo).build(),
                 RecipeStep.builder().stepId(4).label("Servir en coupe").points(30).tool("glass").cocktail(cosmo).build()
@@ -106,7 +150,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .locked(false)
                 .build();
         whisky.setRecipe(Arrays.asList(
-                RecipeStep.builder().stepId(1).label("Verser le whisky").points(40).tool("glass").ingredient("rum").cocktail(whisky).build(),
+                RecipeStep.builder().stepId(1).label("Verser le whisky").points(40).tool("glass").ingredient("whisky").cocktail(whisky).build(),
                 RecipeStep.builder().stepId(2).label("Presser le citron").points(30).tool("mortar").ingredient("lemon").cocktail(whisky).build(),
                 RecipeStep.builder().stepId(3).label("Ajouter le sirop").points(20).tool("glass").ingredient("syrup").cocktail(whisky).build(),
                 RecipeStep.builder().stepId(4).label("Shaker & filtrer").points(30).tool("shaker").cocktail(whisky).build()
