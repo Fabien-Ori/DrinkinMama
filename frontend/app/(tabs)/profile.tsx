@@ -1,292 +1,383 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { DM } from '@/constants/dm-theme';
-
-import { usePlayer } from '@/contexts/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
+import { DM } from '@/constants/dm-theme';
+import { usePlayer } from '@/contexts/player-context';
 
 export default function ProfileScreen() {
-  const { player, activities, user, logout, badges } = usePlayer();
-  const router = useRouter();
-  const xpPercent = (player.xp / player.xpMax) * 100;
+  const { player } = usePlayer();
 
-  const stats = [
-    { label: 'Pièces', value: player.coins.toLocaleString('fr-FR'), icon: 'monetization-on' as const, color: DM.gold },
-    { label: 'Cocktails réalisés', value: String(player.cocktailsCompleted), icon: 'menu-book' as const, color: DM.tealLight },
-    { label: 'Rang global', value: player.globalRank, icon: 'emoji-events' as const, color: DM.purple },
-    { label: 'Série actuelle', value: `${player.streak} j.`, icon: 'whatshot' as const, color: DM.coral },
-  ];
+  // États pour les Modales
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/authentification');
+  // États pour le formulaire d'édition
+  const [editName, setEditName] = useState('Drinking Mama'); // Remplacer par la vraie donnée
+  const [editPassword, setEditPassword] = useState('');
+
+  // Fonctions de validation
+  const handleSaveProfile = () => {
+    // Logique API pour sauvegarder les infos ici
+    console.log('Profil mis à jour :', editName);
+    setIsEditModalVisible(false);
+  };
+
+  const handleDeleteAccount = () => {
+    // Logique API pour supprimer le compte ici
+    console.log('Compte supprimé');
+    setIsDeleteModalVisible(false);
+    // Redirection vers l'authentification à rajouter ici après suppression
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {user ? (
-          <>
-            <View style={styles.header}>
-              <View style={styles.avatarRow}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{player.initials}</Text>
-                </View>
-                <View>
-                  <Text style={styles.name}>{user.username}</Text>
-                  <Text style={styles.emailText}>{user.email}</Text>
-                  <View style={styles.rankBadge}>
-                    <MaterialIcons name="military-tech" size={12} color={DM.gold} />
-                    <Text style={styles.rankText}>{player.rankTitle}</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.xpWrap}>
-                <View style={styles.xpLabel}>
-                  <Text style={styles.xpMuted}>XP Niveau {player.level}</Text>
-                  <Text style={styles.xpMuted}>
-                    {player.xp.toLocaleString('fr-FR')} / {player.xpMax.toLocaleString('fr-FR')}
-                  </Text>
-                </View>
-                <View style={styles.xpTrack}>
-                  <View style={[styles.xpFill, { width: `${xpPercent}%` as `${number}%` }]} />
-                </View>
-              </View>
-              <GlobalHeaderRight />
-            </View>
+      {/* EN-TÊTE */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Mon Profil</Text>
+        <GlobalHeaderRight />
+      </View>
 
-            {user.biography ? (
-              <View style={styles.bioSection}>
-                <Text style={styles.sectionTitle}>Biographie</Text>
-                <View style={styles.bioCard}>
-                  <Text style={styles.bioText}>{user.biography}</Text>
-                </View>
-              </View>
-            ) : null}
-
-            <View style={styles.statsGrid}>
-              {stats.map((stat) => (
-                <View key={stat.label} style={styles.profileStat}>
-                  <MaterialIcons name={stat.icon} size={16} color={stat.color} style={styles.psIcon} />
-                  <Text style={styles.psVal}>{stat.value}</Text>
-                  <Text style={styles.psLabel}>{stat.label}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.badgesSection}>
-              <Text style={styles.sectionTitle}>Badges</Text>
-              <View style={styles.badgesRow}>
-                {badges.map((badge) => (
-                  <View key={badge.id} style={[styles.badgeItem, badge.earned && styles.badgeEarned]}>
-                    <MaterialIcons
-                      name={badge.icon as 'star'}
-                      size={20}
-                      color={badge.earned ? DM.gold : DM.muted}
-                    />
-                    <Text style={[styles.badgeLabel, badge.earned && styles.badgeLabelEarned]}>
-                      {badge.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.activitySection}>
-              <Text style={styles.sectionTitle}>Activité récente</Text>
-              {activities.map((activity) => (
-                <View key={activity.id} style={styles.activityRow}>
-                  <MaterialIcons
-                    name={activity.type === 'success' ? 'check-circle' : 'shopping-bag'}
-                    size={14}
-                    color={activity.type === 'success' ? DM.success : DM.tealLight}
-                  />
-                  <Text style={styles.activityLabel}>{activity.label}</Text>
-                  <Text
-                    style={[
-                      styles.activityPts,
-                      { color: activity.points >= 0 ? DM.gold : DM.danger },
-                    ]}>
-                    {activity.points >= 0 ? '+' : ''}
-                    {activity.points} pts
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.actionSection}>
-              <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <MaterialIcons name="logout" size={16} color="white" />
-                <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        ) : (
-          <View style={styles.unauthenticatedContainer}>
-            <MaterialIcons name="account-circle" size={80} color={DM.muted} />
-            <Text style={styles.unauthTitle}>Vous n'êtes pas connecté</Text>
-            <Text style={styles.unauthSubtitle}>
-              Connectez-vous à votre compte Drinking Mama pour suivre votre progression et voir vos badges.
-            </Text>
-            <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/authentification')}>
-              <Text style={styles.loginButtonText}>Se connecter / S'inscrire</Text>
-            </TouchableOpacity>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        
+        {/* CARTE PROFIL PRINCIPALE */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>DM</Text>
           </View>
-        )}
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{editName}</Text>
+            <View style={styles.badgeContainer}>
+              <MaterialIcons name="star" size={14} color={DM.gold} />
+              <Text style={styles.badgeText}>Maître Mixologue (Niveau {player.level})</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* STATISTIQUES */}
+        <Text style={styles.sectionTitle}>Aperçu</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{player.coins || 0}</Text>
+            <Text style={styles.statLabel}>Pièces</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{player.mixodexUnlocked}</Text>
+            <Text style={styles.statLabel}>Cocktails réalisés</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>#{player.rank || 42}</Text>
+            <Text style={styles.statLabel}>Rang global</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{player.streak} j.</Text>
+            <Text style={styles.statLabel}>Série actuelle</Text>
+          </View>
+        </View>
+
+        {/* GESTION DU COMPTE */}
+        <Text style={styles.sectionTitle}>Paramètres du compte</Text>
+        <View style={styles.settingsContainer}>
+          <Pressable 
+            style={({ pressed }) => [styles.settingButton, pressed && styles.pressed]}
+            onPress={() => setIsEditModalVisible(true)}
+          >
+            <View style={styles.settingButtonLeft}>
+              <MaterialIcons name="edit" size={20} color={DM.teal} />
+              <Text style={styles.settingButtonText}>Modifier le profil</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color={DM.muted} />
+          </Pressable>
+
+          <View style={styles.divider} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingButton, pressed && styles.pressed]}
+            onPress={() => setIsDeleteModalVisible(true)}
+          >
+            <View style={styles.settingButtonLeft}>
+              <MaterialIcons name="delete-forever" size={20} color={DM.danger} />
+              <Text style={[styles.settingButtonText, { color: DM.danger }]}>Supprimer le compte</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color={DM.muted} />
+          </Pressable>
+        </View>
       </ScrollView>
+
+      {/* MODALE : MODIFIER LE PROFIL                */}
+      <Modal
+        visible={isEditModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Modifier mon profil</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nom d'utilisateur</Text>
+              <TextInput
+                style={styles.input}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Votre nom"
+                placeholderTextColor={DM.silver}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nouveau mot de passe</Text>
+              <TextInput
+                style={styles.input}
+                value={editPassword}
+                onChangeText={setEditPassword}
+                placeholder="Laisser vide pour ne pas changer"
+                placeholderTextColor={DM.silver}
+                secureTextEntry
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <Pressable style={styles.btnCancel} onPress={() => setIsEditModalVisible(false)}>
+                <Text style={styles.btnCancelText}>Annuler</Text>
+              </Pressable>
+              <Pressable style={styles.btnSave} onPress={handleSaveProfile}>
+                <Text style={styles.btnSaveText}>Enregistrer</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+    {/* MODALE : SUPPRIMER LE COMPTE */}
+
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.warningIconContainer}>
+              <MaterialIcons name="warning" size={32} color={DM.danger} />
+            </View>
+            <Text style={styles.modalTitle}>Supprimer le compte ?</Text>
+            <Text style={styles.modalSubtitle}>
+              Cette action est irréversible. Toutes vos données, vos recettes et vos pièces seront perdues à jamais.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable style={styles.btnCancel} onPress={() => setIsDeleteModalVisible(false)}>
+                <Text style={styles.btnCancelText}>Annuler</Text>
+              </Pressable>
+              <Pressable style={styles.btnDanger} onPress={handleDeleteAccount}>
+                <Text style={styles.btnSaveText}>Oui, supprimer</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DM.bg },
-  content: { paddingBottom: 24 },
   header: {
     backgroundColor: DM.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
-    borderBottomWidth: 0.5,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
     borderBottomColor: DM.border,
-  },
-  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: DM.purpleDark,
-    borderWidth: 2,
-    borderColor: DM.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 20, fontWeight: '500', color: DM.purple },
-  name: { fontSize: 16, fontWeight: '500', color: DM.text },
-  rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: DM.goldDark,
-    borderWidth: 0.5,
-    borderColor: DM.gold,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginTop: 2,
-    alignSelf: 'flex-start',
+    justifyContent: 'space-between',
   },
-  rankText: { fontSize: 11, color: DM.goldLight },
-  xpWrap: { marginTop: 8 },
-  xpLabel: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  xpMuted: { fontSize: 10, color: DM.muted },
-  xpTrack: {
-    backgroundColor: DM.card,
-    borderRadius: 4,
-    height: 6,
-    borderWidth: 0.5,
+  headerTitle: { fontSize: 20, fontWeight: '700', color: DM.text },
+  scroll: { flex: 1 },
+  content: { padding: 16, paddingBottom: 40 },
+  
+  // Carte Profil
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DM.surface,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: DM.border,
-    overflow: 'hidden',
+    marginBottom: 24,
   },
-  xpFill: { backgroundColor: DM.purple, height: '100%', borderRadius: 4 },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: DM.purpleDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: DM.purple,
+  },
+  avatarText: { fontSize: 22, fontWeight: '700', color: DM.purple },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 18, fontWeight: '700', color: DM.text, marginBottom: 4 },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DM.goldDark,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: DM.goldLight,
+  },
+  badgeText: { fontSize: 11, color: DM.gold, marginLeft: 4, fontWeight: '600' },
+
+  // Sections
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DM.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+
+  // Grille Stats
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    padding: 12,
+    gap: 12,
+    marginBottom: 30,
   },
-  profileStat: {
+  statBox: {
     backgroundColor: DM.surface,
-    borderWidth: 0.5,
-    borderColor: DM.border,
-    borderRadius: 12,
-    padding: 10,
-    alignItems: 'center',
     width: '48%',
     flexGrow: 1,
-  },
-  psIcon: { marginBottom: 4 },
-  psVal: { fontSize: 22, fontWeight: '500', color: DM.text },
-  psLabel: { fontSize: 10, color: DM.muted, marginTop: 2, textAlign: 'center' },
-  badgesSection: { paddingHorizontal: 12, paddingBottom: 12 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DM.muted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  badgesRow: { flexDirection: 'row', gap: 8 },
-  badgeItem: {
-    flex: 1,
-    backgroundColor: DM.surface,
-    borderWidth: 0.5,
-    borderColor: DM.border,
-    borderRadius: 10,
-    padding: 8,
-    alignItems: 'center',
-  },
-  badgeEarned: { borderColor: DM.gold },
-  badgeLabel: { fontSize: 9, color: DM.muted, marginTop: 3, textAlign: 'center' },
-  badgeLabelEarned: { color: DM.goldLight },
-  activitySection: { paddingHorizontal: 12 },
-  activityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
-  activityLabel: { flex: 1, fontSize: 11, color: DM.muted },
-  activityPts: { fontSize: 11, fontWeight: '500' },
-  emailText: { fontSize: 12, color: DM.muted, marginTop: 2 },
-  bioSection: { paddingHorizontal: 12, marginTop: 16 },
-  bioCard: {
-    backgroundColor: DM.surface,
-    borderWidth: 0.5,
-    borderColor: DM.border,
+    padding: 16,
     borderRadius: 12,
-    padding: 12,
-    marginTop: 6,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DM.border,
   },
-  bioText: { fontSize: 13, color: DM.text, lineHeight: 18 },
-  actionSection: { padding: 12, marginTop: 20, alignItems: 'center' },
-  logoutButton: {
+  statValue: { fontSize: 20, fontWeight: '700', color: DM.text, marginBottom: 4 },
+  statLabel: { fontSize: 11, color: DM.muted },
+
+  // Paramètres
+  settingsContainer: {
+    backgroundColor: DM.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DM.border,
+    overflow: 'hidden',
+  },
+  settingButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: DM.danger || '#E74C3C',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    width: '100%',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
   },
-  logoutButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
-  unauthenticatedContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 80,
+  settingButtonLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
   },
-  unauthTitle: {
+  settingButtonText: { fontSize: 15, fontWeight: '500', color: DM.text },
+  divider: { height: 1, backgroundColor: DM.border, marginHorizontal: 16 },
+  pressed: { opacity: 0.7, backgroundColor: DM.bg },
+
+  // Modales
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(42, 40, 38, 0.6)', // Anthracite transparent
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: DM.surface,
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: DM.text,
-    marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  unauthSubtitle: {
+  modalSubtitle: {
     fontSize: 14,
     color: DM.muted,
     textAlign: 'center',
+    marginBottom: 24,
     lineHeight: 20,
-    marginBottom: 30,
   },
-  loginButton: {
-    backgroundColor: DM.gold,
+  warningIconContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  inputGroup: { marginBottom: 16 },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DM.muted,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: DM.bg,
+    borderWidth: 1,
+    borderColor: DM.border,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    height: 48,
+    color: DM.text,
+    fontSize: 15,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10,
+  },
+  btnCancel: {
+    flex: 1,
     paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 10,
+    backgroundColor: DM.bg,
+    borderWidth: 1,
+    borderColor: DM.border,
     alignItems: 'center',
   },
-  loginButtonText: { color: 'white', fontWeight: 'bold', fontSize: 15 },
+  btnCancelText: { color: DM.text, fontWeight: '600', fontSize: 15 },
+  btnSave: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: DM.teal,
+    alignItems: 'center',
+  },
+  btnDanger: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    backgroundColor: DM.danger,
+    alignItems: 'center',
+  },
+  btnSaveText: { color: DM.surface, fontWeight: '600', fontSize: 15 },
 });
