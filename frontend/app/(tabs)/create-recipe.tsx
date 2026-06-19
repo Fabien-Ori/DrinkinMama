@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Platform, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Platform, Switch, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
@@ -11,12 +11,19 @@ export default function CreateRecipeScreen() {
   const router = useRouter();
   const { availableTools, availableIngredients } = usePlayer();
 
+  // Liste locale pour stocker les nouveaux ingrédients créés à la volée
+  const [addedIngredients, setAddedIngredients] = useState<any[]>([]);
+  
+  // Combinaison des ingrédients du back + les nouveaux
+  const allIngredients = [...availableIngredients, ...addedIngredients];
+  const allTools = [...availableTools];
+
   // Infos générales
   const [name, setName] = useState('');
   const [points, setPoints] = useState('100');
   const [level, setLevel] = useState('1');
   
-  // Visuel
+  // Visuel du cocktail
   const [isImage, setIsImage] = useState(false);
   const [visualValue, setVisualValue] = useState('');
 
@@ -25,29 +32,86 @@ export default function CreateRecipeScreen() {
     { id: 1, label: '', points: '20', tool: '', ingredient: '' }
   ]);
 
-  // Ajouter une étape
+  // États pour le Menu Déroulant Custom
+  const [pickerState, setPickerState] = useState({
+    visible: false,
+    stepIndex: -1,
+    type: 'tool' as 'tool' | 'ingredient',
+  });
+
+  // États pour la création d'un Nouvel Ingrédient
+  const [newIngModalVisible, setNewIngModalVisible] = useState(false);
+  const [newIngLabel, setNewIngLabel] = useState('');
+  const [newIngIsImage, setNewIngIsImage] = useState(false);
+  const [newIngVisual, setNewIngVisual] = useState('');
+
+  // ── LOGIQUE DES ÉTAPES ──
   const handleAddStep = () => {
-    setSteps([
-      ...steps,
-      { id: steps.length + 1, label: '', points: '20', tool: '', ingredient: '' }
-    ]);
+    setSteps([...steps, { id: steps.length + 1, label: '', points: '20', tool: '', ingredient: '' }]);
   };
 
-  // Supprimer la dernière étape
   const handleRemoveStep = () => {
-    if (steps.length > 1) {
-      setSteps(steps.slice(0, -1));
-    }
+    if (steps.length > 1) setSteps(steps.slice(0, -1));
   };
 
-  // Mettre à jour une étape spécifique
   const updateStep = (index: number, field: string, value: string) => {
     const newSteps = [...steps];
     newSteps[index] = { ...newSteps[index], [field]: value };
     setSteps(newSteps);
   };
 
-  // Sauvegarder
+  // ── LOGIQUE DU MENU DÉROULANT ──
+  const openPicker = (index: number, type: 'tool' | 'ingredient') => {
+    setPickerState({ visible: true, stepIndex: index, type });
+  };
+
+  const handleSelectOption = (id: string) => {
+    updateStep(pickerState.stepIndex, pickerState.type, id);
+    setPickerState({ ...pickerState, visible: false });
+  };
+
+  const getLabelForId = (id: string, type: 'tool' | 'ingredient') => {
+    if (!id) return "Sélectionner...";
+    if (type === 'tool') {
+      const t = allTools.find(x => x.id === id);
+      return t ? t.label : id;
+    } else {
+      const i = allIngredients.find(x => x.id === id);
+      return i ? i.label : id;
+    }
+  };
+
+  // ── LOGIQUE DU NOUVEL INGRÉDIENT ──
+  const handleCreateIngredient = () => {
+    if (!newIngLabel.trim()) {
+      alert("Le nom de l'ingrédient est requis.");
+      return;
+    }
+    
+    // Génération d'un ID propre (ex: "Jus de Citron" -> "jus_de_citron")
+    const generatedId = newIngLabel.trim().toLowerCase().replace(/\s+/g, '_');
+    
+    const newIngredient = {
+      id: generatedId,
+      label: newIngLabel,
+      emoji: !newIngIsImage ? (newIngVisual || '🌿') : undefined,
+      imageUrl: newIngIsImage ? newIngVisual : undefined,
+    };
+
+    setAddedIngredients([...addedIngredients, newIngredient]);
+    
+    // On l'assigne directement à l'étape en cours si le picker était ouvert
+    if (pickerState.stepIndex !== -1) {
+      updateStep(pickerState.stepIndex, 'ingredient', generatedId);
+    }
+
+    // Reset et fermeture
+    setNewIngLabel('');
+    setNewIngVisual('');
+    setNewIngModalVisible(false);
+  };
+
+  // ── SAUVEGARDE FINALE ──
   const handleSaveRecipe = () => {
     const newRecipe = {
       id: name.toLowerCase().replace(/\s+/g, '-'),
@@ -62,19 +126,13 @@ export default function CreateRecipeScreen() {
         points: parseInt(s.points, 10),
         requiredTool: s.tool,
         requiredIngredient: s.ingredient,
-      }))
+      })),
+      newIngredientsToCreate: addedIngredients // On envoie les nouveaux ingrédients au back
     };
 
     console.log('Nouvelle recette créée :', JSON.stringify(newRecipe, null, 2));
-    
-    if (Platform.OS === 'web') {
-      alert("Recette créée avec succès !");
-      router.back();
-    } else {
-      // Alert native pour mobile
-      alert("Recette créée avec succès !");
-      router.back();
-    }
+    alert("Recette créée avec succès !");
+    router.back();
   };
 
   return (
@@ -85,7 +143,7 @@ export default function CreateRecipeScreen() {
           <MaterialIcons name="arrow-back" size={24} color={DM.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Nouvelle Recette</Text>
-        <View style={{ width: 24 }} /> {/* Espace pour centrer le titre */}
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -183,25 +241,26 @@ export default function CreateRecipeScreen() {
             </View>
 
             <View style={styles.row}>
+              {/* SÉLECTEUR OUTIL */}
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Outil requis (ID)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={step.tool}
-                  onChangeText={(val) => updateStep(index, 'tool', val)}
-                  placeholder="Ex: shaker"
-                  placeholderTextColor={DM.silver}
-                />
+                <Text style={styles.label}>Outil requis</Text>
+                <Pressable style={styles.dropdownInput} onPress={() => openPicker(index, 'tool')}>
+                  <Text style={[styles.dropdownText, !step.tool && styles.dropdownPlaceholder]}>
+                    {getLabelForId(step.tool, 'tool')}
+                  </Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={DM.muted} />
+                </Pressable>
               </View>
+              
+              {/* SÉLECTEUR INGRÉDIENT */}
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Ingrédient requis (ID)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={step.ingredient}
-                  onChangeText={(val) => updateStep(index, 'ingredient', val)}
-                  placeholder="Ex: rhum_blanc"
-                  placeholderTextColor={DM.silver}
-                />
+                <Text style={styles.label}>Ingrédient requis</Text>
+                <Pressable style={styles.dropdownInput} onPress={() => openPicker(index, 'ingredient')}>
+                  <Text style={[styles.dropdownText, !step.ingredient && styles.dropdownPlaceholder]}>
+                    {getLabelForId(step.ingredient, 'ingredient')}
+                  </Text>
+                  <MaterialIcons name="arrow-drop-down" size={20} color={DM.muted} />
+                </Pressable>
               </View>
             </View>
 
@@ -218,7 +277,7 @@ export default function CreateRecipeScreen() {
           </View>
         ))}
 
-        {/* BOUTONS D'AJOUT/SUPPRESSION D'ÉTAPES */}
+        {/* ACTIONS ÉTAPES */}
         <View style={styles.stepActions}>
           <Pressable style={[styles.actionBtn, styles.actionBtnOutline]} onPress={handleRemoveStep}>
             <MaterialIcons name="remove" size={20} color={DM.danger} />
@@ -230,13 +289,109 @@ export default function CreateRecipeScreen() {
           </Pressable>
         </View>
 
-        {/* BOUTON SAUVEGARDER */}
+        {/* SAUVEGARDER */}
         <Pressable style={({ pressed }) => [styles.saveBtn, pressed && styles.pressed]} onPress={handleSaveRecipe}>
           <MaterialIcons name="check-circle" size={20} color={DM.surface} />
           <Text style={styles.saveBtnText}>Créer la recette</Text>
         </Pressable>
-
       </ScrollView>
+
+
+      {/* MODALE : SÉLECTEUR (OUTIL OU INGRÉDIENT)   */}
+      <Modal visible={pickerState.visible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.pickerCard}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>
+                Sélectionner un {pickerState.type === 'tool' ? 'outil' : 'ingrédient'}
+              </Text>
+              <Pressable onPress={() => setPickerState({ ...pickerState, visible: false })}>
+                <MaterialIcons name="close" size={24} color={DM.muted} />
+              </Pressable>
+            </View>
+            
+            <ScrollView style={styles.pickerList}>
+              <Pressable style={styles.pickerItem} onPress={() => handleSelectOption('')}>
+                <Text style={[styles.pickerItemText, { color: DM.muted, fontStyle: 'italic' }]}>Aucun requis</Text>
+              </Pressable>
+              
+              {(pickerState.type === 'tool' ? allTools : allIngredients).map(item => (
+                <Pressable key={item.id} style={styles.pickerItem} onPress={() => handleSelectOption(item.id)}>
+                  <Text style={styles.pickerItemText}>{item.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {/* Bouton Nouvel Ingrédient */}
+            {pickerState.type === 'ingredient' && (
+              <Pressable 
+                style={styles.newIngredientBtn} 
+                onPress={() => {
+                  setPickerState({ ...pickerState, visible: false });
+                  setNewIngModalVisible(true);
+                }}
+              >
+                <MaterialIcons name="add-circle-outline" size={20} color={DM.gold} />
+                <Text style={styles.newIngredientBtnText}>Créer un nouvel ingrédient</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODALE : CRÉER UN NOUVEL INGRÉDIENT */}
+      <Modal visible={newIngModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.pickerCard, { maxHeight: 'auto' }]}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Nouvel Ingrédient</Text>
+              <Pressable onPress={() => setNewIngModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color={DM.muted} />
+              </Pressable>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Nom de l'ingrédient</Text>
+              <TextInput
+                style={styles.input}
+                value={newIngLabel}
+                onChangeText={setNewIngLabel}
+                placeholder="Ex: Sirop de Fraise"
+                placeholderTextColor={DM.silver}
+              />
+            </View>
+
+            <View style={styles.rowBetween}>
+              <Text style={styles.label}>Visuel</Text>
+              <View style={styles.switchRow}>
+                <Text style={[styles.switchLabel, !newIngIsImage && styles.switchLabelActive]}>Emoji</Text>
+                <Switch
+                  value={newIngIsImage}
+                  onValueChange={setNewIngIsImage}
+                  trackColor={{ false: DM.border, true: DM.tealLight }}
+                  thumbColor={newIngIsImage ? DM.teal : DM.silver}
+                />
+                <Text style={[styles.switchLabel, newIngIsImage && styles.switchLabelActive]}>Image</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                value={newIngVisual}
+                onChangeText={setNewIngVisual}
+                placeholder={newIngIsImage ? "URL de l'image..." : "🍓"}
+                placeholderTextColor={DM.silver}
+              />
+            </View>
+
+            <Pressable style={styles.saveBtn} onPress={handleCreateIngredient}>
+              <Text style={styles.saveBtnText}>Ajouter l'ingrédient</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -296,6 +451,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  // Dropdown Custom
+  dropdownInput: {
+    backgroundColor: DM.bg,
+    borderWidth: 1,
+    borderColor: DM.border,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownText: { color: DM.text, fontSize: 14, flex: 1 },
+  dropdownPlaceholder: { color: DM.silver },
+
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   switchLabel: { fontSize: 12, color: DM.muted, fontWeight: '500' },
   switchLabelActive: { color: DM.teal, fontWeight: '700' },
@@ -332,16 +502,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 6,
   },
-  actionBtnOutline: {
-    backgroundColor: DM.bg,
-    borderWidth: 1,
-    borderColor: DM.border,
-  },
-  actionBtnFilled: {
-    backgroundColor: DM.tealDark,
-    borderWidth: 1,
-    borderColor: DM.tealLight,
-  },
+  actionBtnOutline: { backgroundColor: DM.bg, borderWidth: 1, borderColor: DM.border },
+  actionBtnFilled: { backgroundColor: DM.tealDark, borderWidth: 1, borderColor: DM.tealLight },
   actionBtnText: { fontSize: 13, fontWeight: '600' },
 
   saveBtn: {
@@ -352,12 +514,48 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
-    shadowColor: DM.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   saveBtnText: { color: DM.surface, fontSize: 16, fontWeight: '700' },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+
+  // Styles Modales
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(42, 40, 38, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  pickerCard: {
+    backgroundColor: DM.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '80%',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pickerTitle: { fontSize: 18, fontWeight: '700', color: DM.text },
+  pickerList: { marginBottom: 16 },
+  pickerItem: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: DM.border,
+  },
+  pickerItemText: { fontSize: 16, color: DM.text },
+  
+  newIngredientBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    backgroundColor: DM.goldDark,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: DM.goldLight,
+  },
+  newIngredientBtnText: { fontSize: 15, fontWeight: '600', color: DM.gold },
 });
