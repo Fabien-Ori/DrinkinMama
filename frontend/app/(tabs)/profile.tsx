@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
@@ -16,12 +16,35 @@ export default function ProfileScreen() {
 
   // États pour le formulaire d'édition
   const [editName, setEditName] = useState('Drinking Mama'); // Remplacer par la vraie donnée
+  const [oldPassword, setOldPassword] = useState('');
   const [editPassword, setEditPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Fonctions de validation
   const handleSaveProfile = () => {
+    // Vérification basique des mots de passe
+    if (editPassword !== '' || oldPassword !== '' || confirmPassword !== '') {
+      if (oldPassword === '') {
+        Platform.OS === 'web' 
+          ? alert("Veuillez entrer votre ancien mot de passe.") 
+          : Alert.alert("Erreur", "Veuillez entrer votre ancien mot de passe.");
+        return;
+      }
+      if (editPassword !== confirmPassword) {
+        Platform.OS === 'web' 
+          ? alert("Les nouveaux mots de passe ne correspondent pas.") 
+          : Alert.alert("Erreur", "Les nouveaux mots de passe ne correspondent pas.");
+        return;
+      }
+    }
+
     // Logique API pour sauvegarder les infos ici
     console.log('Profil mis à jour :', editName);
+    
+    // On nettoie les champs et on ferme la modale
+    setOldPassword('');
+    setEditPassword('');
+    setConfirmPassword('');
     setIsEditModalVisible(false);
   };
 
@@ -30,6 +53,13 @@ export default function ProfileScreen() {
     console.log('Compte supprimé');
     setIsDeleteModalVisible(false);
     // Redirection vers l'authentification à rajouter ici après suppression
+  };
+
+  const handleCloseEditModal = () => {
+    setOldPassword('');
+    setEditPassword('');
+    setConfirmPassword('');
+    setIsEditModalVisible(false);
   };
 
   return (
@@ -106,12 +136,12 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* MODALE : MODIFIER LE PROFIL                */}
+      {/* MODALE : MODIFIER LE PROFIL */}
       <Modal
         visible={isEditModalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setIsEditModalVisible(false)}
+        onRequestClose={handleCloseEditModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -128,6 +158,20 @@ export default function ProfileScreen() {
               />
             </View>
 
+            <View style={styles.dividerModal} />
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Ancien mot de passe</Text>
+              <TextInput
+                style={styles.input}
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                placeholder="Requis pour changer"
+                placeholderTextColor={DM.silver}
+                secureTextEntry
+              />
+            </View>
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Nouveau mot de passe</Text>
               <TextInput
@@ -140,8 +184,20 @@ export default function ProfileScreen() {
               />
             </View>
 
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Confirmer le nouveau mot de passe</Text>
+              <TextInput
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Retapez votre nouveau mot de passe"
+                placeholderTextColor={DM.silver}
+                secureTextEntry
+              />
+            </View>
+
             <View style={styles.modalActions}>
-              <Pressable style={styles.btnCancel} onPress={() => setIsEditModalVisible(false)}>
+              <Pressable style={styles.btnCancel} onPress={handleCloseEditModal}>
                 <Text style={styles.btnCancelText}>Annuler</Text>
               </Pressable>
               <Pressable style={styles.btnSave} onPress={handleSaveProfile}>
@@ -152,8 +208,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-    {/* MODALE : SUPPRIMER LE COMPTE */}
-
+      {/* MODALE : SUPPRIMER LE COMPTE */}
       <Modal
         visible={isDeleteModalVisible}
         transparent={true}
@@ -297,7 +352,7 @@ const styles = StyleSheet.create({
   // Modales
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(42, 40, 38, 0.6)', // Anthracite transparent
+    backgroundColor: 'rgba(42, 40, 38, 0.6)', 
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -331,6 +386,12 @@ const styles = StyleSheet.create({
   warningIconContainer: {
     alignItems: 'center',
     marginBottom: 16,
+  },
+  dividerModal: {
+    height: 1,
+    backgroundColor: DM.border,
+    marginVertical: 16,
+    width: '100%',
   },
   inputGroup: { marginBottom: 16 },
   inputLabel: {
