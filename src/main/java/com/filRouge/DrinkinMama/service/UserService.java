@@ -192,12 +192,22 @@ public class UserService {
             user.setUsername(request.getUsername());
             String newSlug = slugify.slugify(request.getUsername());
             user.setSlug(newSlug);
+
+            String newInitials = request.getUsername().length() >= 2
+                    ? request.getUsername().substring(0, 2).toUpperCase()
+                    : request.getUsername().toUpperCase();
+            user.setInitials(newInitials);
         }
 
         if (request.getEmail() != null) user.setEmail(request.getEmail());
         if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
         if (request.getBiography() != null) user.setBiography(request.getBiography());
         if (request.getUserImage() != null) user.setUserImage(request.getUserImage());
+
+        if (request.getAvatarBg() != null) user.setAvatarBg(request.getAvatarBg());
+        if (request.getAvatarColor() != null) user.setAvatarColor(request.getAvatarColor());
+
+        if (request.getInitials() != null) user.setInitials(request.getInitials());
     }
 
 }

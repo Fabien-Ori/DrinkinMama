@@ -1,7 +1,10 @@
 package com.filRouge.DrinkinMama.config;
 
+import com.filRouge.DrinkinMama.entity.badge.Badge;
+import com.filRouge.DrinkinMama.entity.shop.ShopItem;
 import com.filRouge.DrinkinMama.entity.user.AuthProvider;
 import com.filRouge.DrinkinMama.entity.user.Role;
+import com.filRouge.DrinkinMama.entity.user.User;
 import com.filRouge.DrinkinMama.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -35,7 +38,7 @@ public class InitDB {
      */
     @Bean
     CommandLineRunner initUsers(UserRepository userRepository,
-                                PasswordEncoder passwordEncoder) {
+                                PasswordEncoder passwordEncoder, UserInventoryRepository userInventoryRepository, ShopItemRepository shopItemRepository, UserBadgeRepository userBadgeRepository, BadgeRepository badgeRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 List<com.filRouge.DrinkinMama.entity.user.User> users = List.of(
@@ -50,6 +53,9 @@ public class InitDB {
                                 .initials("MX")
                                 .avatarBg("#1a0d1e")
                                 .avatarColor("#7F77DD")
+                                .cocktailsCompleted(16)
+                                .rank(1)
+                                .streak(16)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Alexia")
@@ -62,6 +68,9 @@ public class InitDB {
                                 .initials("AL")
                                 .avatarBg("#2a1808")
                                 .avatarColor("#cd7f32")
+                                .cocktailsCompleted(12)
+                                .rank(2)
+                                .streak(12)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Sara_R")
@@ -74,6 +83,9 @@ public class InitDB {
                                 .initials("SR")
                                 .avatarBg("#0d1a12")
                                 .avatarColor("#7F77DD")
+                                .cocktailsCompleted(11)
+                                .rank(3)
+                                .streak(11)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("KiviBar")
@@ -86,6 +98,9 @@ public class InitDB {
                                 .initials("KV")
                                 .avatarBg("#2a1808")
                                 .avatarColor("#cd7f32")
+                                .cocktailsCompleted(10)
+                                .rank(4)
+                                .streak(10)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("ToniNegroni")
@@ -98,9 +113,12 @@ public class InitDB {
                                 .initials("TN")
                                 .avatarBg("#1a0d1e")
                                 .avatarColor("#7F77DD")
+                                .cocktailsCompleted(9)
+                                .rank(5)
+                                .streak(9)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
-                                .username("Macron Explosion")
+                                .username("MacronExplosion")
                                 .email("macron@bar.fr")
                                 .provider(AuthProvider.LOCAL)
                                 .password(passwordEncoder.encode("Password@123"))
@@ -110,6 +128,9 @@ public class InitDB {
                                 .initials("JD")
                                 .avatarBg("#2a2847")
                                 .avatarColor("#7F77DD")
+                                .cocktailsCompleted(5)
+                                .rank(6)
+                                .streak(5)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Accoow")
@@ -137,6 +158,60 @@ public class InitDB {
                                 .build()
                 );
                 userRepository.saveAll(users);
+                userRepository.flush();
+            }
+            if (userInventoryRepository.count() == 0) {
+                List<User> users = userRepository.findAll();
+                List<ShopItem> items = shopItemRepository.findAll();
+
+                userInventoryRepository.saveAll(List.of(
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Sirop de rose")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Fleur de sureau")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Citron yuzu")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Recette Margarita")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Shaker doré")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("Alexia")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("Sara_R")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("KiviBar")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("ToniNegroni")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserInventory.builder().user(users.stream().filter(u->u.getUsername().equals("MacronExplosion")).findFirst().get()).shopItem(items.stream().filter(i->i.getName().equals("Myrtilles fraîches")).findFirst().get()).build()
+
+                ));
+            }
+
+            if (userBadgeRepository.count() == 0) {
+                List<User> users = userRepository.findAll();
+                List<Badge> badges = badgeRepository.findAll();
+
+                userBadgeRepository.saveAll(List.of(
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("5 jours")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("10 cocktails")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MaxBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build(),
+
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Alexia")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Alexia")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("5 jours")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Alexia")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("10 cocktails")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Alexia")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build(),
+
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Sara_R")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Sara_R")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("5 jours")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Sara_R")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("10 cocktails")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("Sara_R")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build(),
+
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("KiviBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("KiviBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("5 jours")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("KiviBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("10 cocktails")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("KiviBar")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build(),
+
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("ToniNegroni")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("ToniNegroni")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("5 jours")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("ToniNegroni")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build(),
+
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MacronExplosion")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Première recette")).findFirst().get()).build(),
+                        com.filRouge.DrinkinMama.entity.user.UserBadge.builder().user(users.stream().filter(u->u.getUsername().equals("MacronExplosion")).findFirst().get()).badge(badges.stream().filter(b->b.getLabel().equals("Rang Top 10")).findFirst().get()).build()
+                ));
             }
         };
     }

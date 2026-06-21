@@ -25,4 +25,11 @@ public class UserRequest {
     private String biography;
     @Pattern(regexp = "^(http|https)://.*", message = "Chaque image doit avoir une URL valide commançant par http ou https.")
     private String UserImage;
+
+    @Size(max = 2, message = "Les initiales doivent faire au maximum 2 caractères.")
+    private String initials;
+
+    private String avatarBg;
+
+    private String avatarColor;
 }

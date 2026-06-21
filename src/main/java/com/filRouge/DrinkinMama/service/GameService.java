@@ -4,7 +4,9 @@ import com.filRouge.DrinkinMama.DTO.ActionRequest;
 import com.filRouge.DrinkinMama.DTO.GameSession;
 import com.filRouge.DrinkinMama.entity.cocktail.Cocktail;
 import com.filRouge.DrinkinMama.entity.cocktail.RecipeStep;
+import com.filRouge.DrinkinMama.entity.user.User;
 import com.filRouge.DrinkinMama.repository.CocktailRepository;
+import com.filRouge.DrinkinMama.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,9 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GameService {
     private final CocktailRepository cocktailRepository;
     private final Map<Long, GameSession> activeSessions = new ConcurrentHashMap<>();
+    private final UserRepository userRepository;
+    private final BadgeService badgeService;
 
-    public GameService(CocktailRepository cocktailRepository) {
+    public GameService(CocktailRepository cocktailRepository,  UserRepository userRepository, BadgeService badgeService) {
         this.cocktailRepository = cocktailRepository;
+        this.badgeService = badgeService;
+        this.userRepository = userRepository;
     }
 
     public GameSession startSession(Long cocktailId) {
@@ -48,5 +54,16 @@ public class GameService {
             }
         }
         return isValid;
+    }
+
+    public void processCocktailCompletion(User user, int pointsGagnes) {
+        int nouveauScore = (user.getScore() != null ? user.getScore() : 0) + pointsGagnes;
+        int nouveauTotalCocktails = (user.getCocktailsCompleted() != null ? user.getCocktailsCompleted() : 0) + 1;
+
+        user.setScore(nouveauScore);
+        user.setCocktailsCompleted(nouveauTotalCocktails);
+        userRepository.save(user);
+
+        badgeService.checkAndGrantBadges(user, nouveauTotalCocktails, nouveauScore);
     }
 }

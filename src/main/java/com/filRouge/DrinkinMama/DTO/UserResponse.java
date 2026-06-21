@@ -19,6 +19,13 @@ public class UserResponse {
     private String biography;
     private String userImage;
     private String slug;
+    private Integer score;
+    private String initials;
+    private String avatarBg;
+    private String avatarColor;
+    private Integer cocktailsCompleted;
+    private Integer rank;
+    private Integer streak;
 
     public static UserResponse fromEntity(User user) {
 
@@ -30,6 +37,13 @@ public class UserResponse {
                 .biography(user.getBiography())
                 .userImage(user.getUserImage())
                 .slug(user.getSlug())
+                .score(user.getScore())
+                .initials(user.getInitials())
+                .avatarBg(user.getAvatarBg())
+                .avatarColor(user.getAvatarColor())
+                .cocktailsCompleted(user.getCocktailsCompleted())
+                .rank(user.getRank())
+                .streak(user.getStreak())
                 .build();
     }
 

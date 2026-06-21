@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { DM } from '@/constants/dm-theme';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/auth';
+const API_URL = 'http://localhost:8090/auth';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -18,7 +18,7 @@ export default function LoginScreen() {
         setErrorMessage('');
 
         try {
-            const cleanUsername = username.trim().toLowerCase();
+            const cleanUsername = username.trim();
             const cleanPassword = password.trim();
 
             const response = await fetch(`${API_URL}/authenticate`, {
@@ -76,7 +76,7 @@ export default function LoginScreen() {
                         style={styles.input}
                         placeholder="Nom d'utilisateur"
                         placeholderTextColor={DM.silver}
-                        autoCapitalize="none"
+                        autoCapitalize="words"
                         value={username}
                         onChangeText={setUsername}
                     />

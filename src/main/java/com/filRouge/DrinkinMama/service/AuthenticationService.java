@@ -15,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
+
 
 /**
  * Service qui gère les opérations d'authentification des utilisateurs.
@@ -48,6 +50,17 @@ public class AuthenticationService {
         );
         String generatedSlug = slugify.slugify(request.getUsername());
 
+        String initials = request.getUsername().length() >= 2
+                ? request.getUsername().substring(0, 2).toUpperCase()
+                : request.getUsername().toUpperCase();
+
+        String[] backgroundColors = {"#2a1808", "#0d1a12", "#1a0d1e", "#2a2847"};
+        String[] textColors = {"#cd7f32", "#7F77DD"};
+
+        Random random = new Random();
+        String randomBg = backgroundColors[random.nextInt(backgroundColors.length)];
+        String randomColor = textColors[random.nextInt(textColors.length)];
+
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -57,6 +70,12 @@ public class AuthenticationService {
                 .slug(generatedSlug)
                 .role(Role.User)
                 .provider(AuthProvider.LOCAL)
+                .initials(initials)
+                .avatarBg(randomBg)
+                .avatarColor(randomColor)
+                .cocktailsCompleted(0)
+                .score(0)
+                .streak(0)
                 .build();
 
         repository.save(user);

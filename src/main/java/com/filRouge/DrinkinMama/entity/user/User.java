@@ -59,6 +59,15 @@ public class User implements UserDetails {
     @Column(name = "avatar_color", length = 20)
     private String avatarColor;
 
+    @Column(name = "cocktails_completed")
+    private Integer cocktailsCompleted = 0;
+
+    @Column(name = "rank")
+    private Integer rank;
+
+    @Column(name = "streak")
+    private Integer streak = 0;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role != null ? role.getAuthorities() : null;
