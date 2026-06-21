@@ -66,4 +66,20 @@ public class GameService {
 
         badgeService.checkAndGrantBadges(user, nouveauTotalCocktails, nouveauScore);
     }
+
+    public void updatePlayerStats(Long userId, int pointsEarned) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        user.setScore(user.getScore() + pointsEarned);
+        user.setCocktailsCompleted(user.getCocktailsCompleted() + 1);
+
+        int newLevel = (user.getScore() / 1000) + 1;
+
+        if (newLevel > user.getLevel()) {
+            user.setLevel(newLevel);
+        }
+
+        userRepository.save(user);
+    }
 }

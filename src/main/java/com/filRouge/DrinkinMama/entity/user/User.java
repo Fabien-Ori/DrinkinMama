@@ -68,6 +68,9 @@ public class User implements UserDetails {
     @Column(name = "streak")
     private Integer streak = 0;
 
+    @Column(name = "level")
+    private Integer level = 1;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role != null ? role.getAuthorities() : null;

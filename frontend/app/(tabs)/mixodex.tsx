@@ -10,11 +10,24 @@ import { useAuth } from '@/context/AuthContext'; // On utilise useAuth
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090';
 
+interface Cocktail {
+  id: number;
+  slug: string;
+  name: string;
+  emoji: string;
+  thumbClass: string;
+  point: number;
+  level: number;
+  stars: number;
+  locked: boolean;
+  lockReason?: string;
+}
+
 export default function MixodexScreen() {
   const router = useRouter();
   const { userToken } = useAuth(); // Récupération du token
   const [search, setSearch] = useState('');
-  const [cocktails, setCocktails] = useState([]);
+  const [cocktails, setCocktails] = useState<Cocktail[]>([]);
 
   useEffect(() => {
     const fetchCocktails = async () => {
@@ -44,7 +57,7 @@ export default function MixodexScreen() {
 
   const unlockedCount = cocktails.filter((c: any) => !c.locked).length;
 
-  const handleCocktailPress = async (id: string, locked: boolean) => {
+  const handleCocktailPress = async (id: string, locked: boolean, slug: string) => {
     if (locked) return;
 
     try {
@@ -58,12 +71,7 @@ export default function MixodexScreen() {
 
       const sessionData = await response.json();
 
-      router.push({
-        pathname: '/game',
-        params: {
-          cocktailId: id
-        }
-      });
+      router.push(`/${slug}` as any);
     } catch (error) {
       console.error("Erreur démarrage:", error);
     }
@@ -99,7 +107,7 @@ export default function MixodexScreen() {
               <Pressable
                   key={item.content?.id ?? item.id}
                   style={[styles.card, (item.content?.locked ?? item.locked) && styles.cardLocked]}
-                  onPress={() => handleCocktailPress(item.content?.id ?? item.id, item.content?.locked ?? item.locked)}
+                  onPress={() => handleCocktailPress(item.content?.id ?? item.id, item.content?.locked ?? item.locked, item.content?.slug ?? item.slug)}
               >
                 <View style={styles.thumb}>
                   {item.imageUrl ? (

@@ -26,6 +26,7 @@ public class UserResponse {
     private Integer cocktailsCompleted;
     private Integer rank;
     private Integer streak;
+    private Integer level;
 
     public static UserResponse fromEntity(User user) {
 
@@ -44,6 +45,7 @@ public class UserResponse {
                 .cocktailsCompleted(user.getCocktailsCompleted())
                 .rank(user.getRank())
                 .streak(user.getStreak())
+                .level(user.getLevel())
                 .build();
     }
 

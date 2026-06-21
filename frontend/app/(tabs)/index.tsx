@@ -1,37 +1,118 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
+import { useAuth } from '@/context/AuthContext';
 import { usePlayer } from '@/context/player-context';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090';
+
+interface Cocktail {
+  id: number;
+  slug: string;
+  name: string;
+  emoji: string;
+  thumbClass: string;
+  point: number;
+  level: number;
+  stars: number;
+  locked: boolean;
+  lockReason?: string;
+}
 
 export default function HomeScreen() {
   const router = useRouter();
-  
-  // NOUVEAU : On importe "cocktails" (la liste complète) au lieu de l'ancien dailyCocktail fixe
-  const { player, cocktails, startGame } = usePlayer();
+  const { userToken, isLoading } = useAuth();
 
-  // NOUVEAU : Calcul automatique du cocktail du jour basé sur la date
+  const [cocktails, setCocktails] = useState<Cocktail[]>([]);
+
+  const [user, setUser] = useState<any>(null);
+  const [LoadingProfile, setLoadingProfile] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/me`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${userToken}`, 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data);
+      }
+    } catch (err) {
+      console.error('Erreur chargement profil:', err);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCocktails = async () => {
+      try {
+        const response = await fetch(`${API_URL}/cocktails`, {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        const data = await response.json();
+
+        console.log("Données reçues :", Object.keys(data._embedded));
+
+        const embedded = data._embedded;
+        const key = Object.keys(embedded)[0];
+        setCocktails(embedded[key]);
+
+      } catch (error) {
+        console.error("Erreur:", error);
+      }
+    };
+    fetchCocktails();
+  }, [userToken]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!userToken) {
+      router.replace('/authentification');
+      return;
+    }
+    fetchProfile();
+  }, [userToken, isLoading]);
+
+  const unlockedCount = cocktails.filter((c: any) => !c.locked).length;
+
   const cocktailDuJour = useMemo(() => {
     if (!cocktails || cocktails.length === 0) return null;
-    
-    // Calcule le nombre de jours écoulés depuis le 1er janvier 1970
+
     const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    
-    // Le modulo (%) permet de boucler sur la liste des cocktails de manière cyclique
     const index = daysSinceEpoch % cocktails.length;
     return cocktails[index];
   }, [cocktails]);
 
+  const handlePlay = async () => {
+    if (!cocktailDuJour) return;
 
+    if (cocktailDuJour.locked) {
+      router.push(`/${cocktailDuJour.slug}` as any);
+    }
 
-  const handlePlay = () => {
-    if (cocktailDuJour) {
-      startGame(cocktailDuJour.id);
-      router.push('/game');
+    try {
+      const response = await fetch(`${API_URL}/cocktails/${cocktailDuJour.id}/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        router.push(`/${cocktailDuJour.slug}` as any);
+      } else {
+        console.error("Erreur démarrage session");
+      }
+    } catch (error) {
+      console.error("Erreur démarrage:", error);
     }
   };
 
@@ -43,16 +124,16 @@ export default function HomeScreen() {
   ];
 
   const stats = [
-    { label: 'Rang', value: player.rank, icon: 'emoji-events' as const, color: DM.purple, bg: DM.purpleDark },
+    { label: 'Rang', value: `${user?.rank || "Pas de rang"}`, icon: 'emoji-events' as const, color: DM.purple, bg: DM.purpleDark },
     {
       label: 'Mixodex',
-      value: `${player.mixodexUnlocked} / ${player.mixodexTotal}`,
+      value: `${unlockedCount} / ${cocktails.length}`,
       icon: 'menu-book' as const,
       color: DM.tealLight,
       bg: DM.tealDark,
     },
-    { label: 'Série', value: `${player.streak} j.`, icon: 'whatshot' as const, color: DM.coral, bg: DM.coralDark },
-    { label: 'Niveau', value: String(player.level), icon: 'star' as const, color: DM.gold, bg: DM.goldDark },
+    { label: 'Série', value: `${user?.streak || 0} j.`, icon: 'whatshot' as const, color: DM.coral, bg: DM.coralDark },
+    { label: 'Niveau', value: `Lvl ${user?.level || 1}`, icon: 'star' as const, color: DM.gold, bg: DM.goldDark },
   ];
 
   return (
@@ -65,17 +146,10 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.hero}>
-          {/* NOUVEAU DESIGN : Affichage de l'image du cocktail */}
           <View style={styles.heroImageContainer}>
-            {cocktailDuJour?.imageUrl ? (
-              <Image 
-                source={{ uri: cocktailDuJour.imageUrl }} 
-                style={styles.heroImage} 
-                resizeMode="cover" 
-              />
-            ) : (
+            <View style={styles.heroImageContainer}>
               <Text style={styles.heroEmoji}>{cocktailDuJour?.emoji}</Text>
-            )}
+            </View>
           </View>
           
           <Text style={styles.heroTitle}>Cocktail du jour</Text>

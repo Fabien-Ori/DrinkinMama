@@ -25,8 +25,6 @@ export default function ProfileScreen() {
   const [editPassword, setEditPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-
-
     const fetchProfile = async () => {
       try {
         const response = await fetch(`${API_URL}/users/me`, {

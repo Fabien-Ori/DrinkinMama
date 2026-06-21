@@ -56,6 +56,7 @@ public class InitDB {
                                 .cocktailsCompleted(16)
                                 .rank(1)
                                 .streak(16)
+                                .level(13)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Alexia")
@@ -71,6 +72,7 @@ public class InitDB {
                                 .cocktailsCompleted(12)
                                 .rank(2)
                                 .streak(12)
+                                .level(9)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Sara_R")
@@ -86,6 +88,7 @@ public class InitDB {
                                 .cocktailsCompleted(11)
                                 .rank(3)
                                 .streak(11)
+                                .level(8)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("KiviBar")
@@ -101,6 +104,7 @@ public class InitDB {
                                 .cocktailsCompleted(10)
                                 .rank(4)
                                 .streak(10)
+                                .level(7)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("ToniNegroni")
@@ -116,6 +120,7 @@ public class InitDB {
                                 .cocktailsCompleted(9)
                                 .rank(5)
                                 .streak(9)
+                                .level(6)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("MacronExplosion")
@@ -131,6 +136,7 @@ public class InitDB {
                                 .cocktailsCompleted(5)
                                 .rank(6)
                                 .streak(5)
+                                .level(2)
                                 .build(),
                         com.filRouge.DrinkinMama.entity.user.User.builder()
                                 .username("Accoow")
