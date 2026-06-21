@@ -6,7 +6,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 import com.filRouge.DrinkinMama.DTO.UserRequest;
 import com.filRouge.DrinkinMama.DTO.UserResponse;
-import com.filRouge.DrinkinMama.DTO.UserGameStatsRequest;
 import com.filRouge.DrinkinMama.service.UserService;
 
 
@@ -36,11 +35,6 @@ public class UserController {
         return userService.updateCurrentUserProfile(request);
     }
 
-    @PatchMapping("/me/stats")
-    public EntityModel<UserResponse> updateCurrentUserStats(@RequestBody UserGameStatsRequest request) {
-        return userService.updateCurrentUserStats(request);
-    }
-
 
     @GetMapping("/{id}")
     public EntityModel<UserResponse> getUserById(@PathVariable("id") Long id) {
@@ -56,5 +50,10 @@ public class UserController {
     @PatchMapping("/{id}")
     public EntityModel<UserResponse> patchUser(@Valid @PathVariable("id") Long id, @RequestBody UserRequest request) {
         return userService.updateUser(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
     }
 }

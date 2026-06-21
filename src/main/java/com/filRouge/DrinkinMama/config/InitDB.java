@@ -1,11 +1,11 @@
 package com.filRouge.DrinkinMama.config;
 
 import com.filRouge.DrinkinMama.entity.user.AuthProvider;
+import com.filRouge.DrinkinMama.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.filRouge.DrinkinMama.repository.UserRepository;
 
 import java.util.List;
 
@@ -76,6 +76,7 @@ public class InitDB {
                                 .build()
                 );
                 userRepository.saveAll(users);
+
             }
         };
     }

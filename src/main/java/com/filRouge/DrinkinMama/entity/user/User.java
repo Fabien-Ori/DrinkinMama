@@ -21,13 +21,20 @@ public class User implements UserDetails {
     @Column(name = "id_user", nullable = false, updatable = false, unique = true)
     private Long id;
 
+    @Column(name = "slug_user", nullable = false, unique = true, length = 50)
+    private String slug;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 50)
+    private Role role;
+
     @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
     @Column(name = "biography", columnDefinition = "TEXT")
@@ -36,86 +43,26 @@ public class User implements UserDetails {
     @Column(name = "user_image", columnDefinition = "TEXT")
     private String userImage;
 
-    @Column(name = "slug", unique = true, nullable = false, length = 50)
-    private String slug;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 50)
-    private Role role;
-
-    @Column(name = "coins")
-    @Builder.Default
-    private Integer coins = 0;
-
-    @Column(name = "score")
-    @Builder.Default
-    private Integer score = 0;
-
-    @Column(name = "level")
-
-    @Builder.Default
-    private Integer level = 1;
-
-    @Column(name = "xp")
-    @Builder.Default
-    private Integer xp = 0;
-
-    @Column(name = "xp_max")
-    @Builder.Default
-    private Integer xpMax = 1000;
-
-    @Column(name = "streak")
-    @Builder.Default
-    private Integer streak = 0;
-
-    @Column(name = "cocktails_completed")
-    @Builder.Default
-    private Integer cocktailsCompleted = 0;
-
-    @Column(name = "rank_title", length = 100)
-    @Builder.Default
-    private String rankTitle = "Apprenti Mixologue";
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "provider", nullable = false, length = 20)
     private AuthProvider provider;
 
-    public Integer getCoins() {
-        return coins == null ? 0 : coins;
-    }
+    @Column(name = "score")
+    private Integer score;
 
-    public Integer getScore() {
-        return score == null ? 0 : score;
-    }
+    @Column(name = "initials", length = 5)
+    private String initials;
 
-    public Integer getLevel() {
-        return level == null ? 1 : level;
-    }
+    @Column(name = "avatar_bg", length = 20)
+    private String avatarBg;
 
-    public Integer getXp() {
-        return xp == null ? 0 : xp;
-    }
+    @Column(name = "avatar_color", length = 20)
+    private String avatarColor;
 
-    public Integer getXpMax() {
-        return xpMax == null ? 1000 : xpMax;
-    }
+    @Column(name = "is_me")
+    private Boolean isMe;
 
-    public Integer getStreak() {
-        return streak == null ? 0 : streak;
-    }
-
-    public Integer getCocktailsCompleted() {
-        return cocktailsCompleted == null ? 0 : cocktailsCompleted;
-    }
-
-    public String getRankTitle() {
-        return rankTitle == null ? "Apprenti Mixologue" : rankTitle;
-    }
-
-    public String getProfileUsername() {
-        return this.username;
-    }
-
+    // --- Adaptations pour UserDetails ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -123,27 +70,24 @@ public class User implements UserDetails {
     }
 
     @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 }

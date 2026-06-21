@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CoinsBadge } from '@/components/dm/coins-badge';
 import { DM } from '@/constants/dm-theme';
 import { ShopItem } from '@/constants/mock-data';
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 type ShopTab = ShopItem['category'];

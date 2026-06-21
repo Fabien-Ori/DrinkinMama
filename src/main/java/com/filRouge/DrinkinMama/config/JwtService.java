@@ -26,7 +26,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String secretKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private static final String secretKey = "9a4f2c8d3e1b7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a";
 
     /**
      * Extrait le nom d'utilisateur (username) contenu dans un token JWT.
@@ -115,4 +115,3 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-

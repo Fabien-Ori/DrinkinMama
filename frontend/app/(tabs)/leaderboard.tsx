@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 interface LeaderboardPlayer {

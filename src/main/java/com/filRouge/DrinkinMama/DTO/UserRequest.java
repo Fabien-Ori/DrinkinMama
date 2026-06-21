@@ -8,22 +8,21 @@ import java.util.List;
 
 @Data
 public class UserRequest {
-    @NotBlank(message = "Username is required.")
-    @Pattern(regexp = "^[a-zA-Z0-9_\\-\\.]+$", message = "Username can only contain letters, numbers, dashes, underscores, and dots.")
+    @NotBlank(message = "Le pseudo est requis.")
+    @Pattern(regexp = "^[a-zA-Z0-9_\\-\\.]+$", message = "Le pseudo peut seulement contenir des lettres, des nombres, des tirets, des underscores, et des points.")
     private String Username;
-    @NotBlank(message = "Email is required.")
-    @Email(message = "Email must be valid.")
+    @NotBlank(message = "L'email est requis.")
+    @Email(message = "L'email doit être valide.")
     private String email;
-    @NotBlank(message = "Password is required.")
-    @Size(min = 8, message = "Password must be at least 8 characters long.")
+    @NotBlank(message = "Le mot de passe est requis.")
+    @Size(min = 8, message = "Le mot de passe doit faire au moins 8 caractères.")
     private String password;
 
-    @NotNull(message = "Role is required.")
+    @NotNull(message = "Le rôle est requis.")
     private Role role;
 
-    @Size(max = 500, message = "Biography must not exceed 500 characters.")
+    @Size(max = 500, message = "La biographie ne doit pas excéder 500 caractères.")
     private String biography;
-    @Pattern(regexp = "^(http|https)://.*", message = "Image URL must be a valid URL starting with http or https.")
+    @Pattern(regexp = "^(http|https)://.*", message = "Chaque image doit avoir une URL valide commançant par http ou https.")
     private String UserImage;
 }
-

@@ -1,5 +1,6 @@
 package com.filRouge.DrinkinMama.config;
 
+import com.filRouge.DrinkinMama.service.TokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,7 @@ public class SecurityConfiguration {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Value("${springdoc.swagger-ui.enabled:false}")
     private boolean swaggerEnabled;
@@ -43,9 +45,7 @@ public class SecurityConfiguration {
      * Liste des URL accessibles sans authentification.
      */
     private static final String[] WHITE_LIST_URL = {
-            "/users/**",
             "/api/v1/auth/**",
-            "/api/v1/game/**",
             "/error"
     };
 
@@ -61,7 +61,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8081"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "DELETE", "OPTIONS","HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -97,12 +97,19 @@ public class SecurityConfiguration {
                     auth.requestMatchers(WHITE_LIST_URL).permitAll()
                             .requestMatchers("/error").permitAll()
 
-                            .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
-
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                             .access((authentication, context) -> new AuthorizationDecision(swaggerEnabled))
 
+                            /*User permissions*/
+                            .requestMatchers(HttpMethod.GET, "/users").hasRole("Admin")
+                            .requestMatchers("/users/me").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("User", "Admin")
+                            .requestMatchers(HttpMethod.GET, "/users/slug/{slug}").hasAnyRole("User", "Admin")
+
                             .requestMatchers(HttpMethod.POST, "/users").hasRole("Admin")
+
+                            .requestMatchers(HttpMethod.PATCH, "/users/{id}").hasAnyRole("User", "Admin")
+
                             .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("Admin")
 
                             .anyRequest().authenticated();
@@ -110,7 +117,22 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/auth/logout")
+                        .addLogoutHandler((request, response, authentication) -> {
+                            String authHeader = request.getHeader("Authorization");
+                            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                                String jwt = authHeader.substring(7);
+
+                                tokenBlacklistService.blacklistToken(jwt);
+                            }
+                        })
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_OK);
+                        })
+                )
+
                 .build();
     }
 }
-

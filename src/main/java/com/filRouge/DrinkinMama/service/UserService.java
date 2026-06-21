@@ -7,16 +7,14 @@ import com.filRouge.DrinkinMama.entity.user.Role;
 import com.filRouge.DrinkinMama.repository.UserRepository;
 import com.filRouge.DrinkinMama.entity.user.User;
 import com.filRouge.DrinkinMama.DTO.UserResponse;
-import com.filRouge.DrinkinMama.DTO.UserGameStatsRequest;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -48,11 +46,9 @@ public class UserService {
      * @return an {@link EntityModel} containing the current user's profile
      * @throws ResponseStatusException if the user is not found in the database
      */
+    @Transactional(readOnly = true)
     public EntityModel<UserResponse> getCurrentUserProfile() {
-        String userEmail = getCurrentUserEmail();
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found : " + userEmail));
+        User user = getCurrentAuthenticatedUser();
 
         UserResponse response = UserResponse.fromEntity(user);
 
@@ -82,20 +78,9 @@ public class UserService {
      */
     public EntityModel<UserResponse> updateCurrentUserProfile(UserRequest request) {
         try {
-            String email = getCurrentUserEmail();
+            User existingUser = getCurrentAuthenticatedUser();
 
-            User existingUser = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + email));
-
-            if (request.getUsername() != null) {
-                existingUser.setUsername(request.getUsername());
-                String newSlug = slugify.slugify(request.getUsername());
-                existingUser.setSlug(newSlug);
-            }
-            if (request.getEmail() != null) existingUser.setEmail(request.getEmail());
-            if (request.getPassword() != null) existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            if (request.getBiography() != null) existingUser.setBiography(request.getBiography());
-            if (request.getUserImage() != null) existingUser.setUserImage(request.getUserImage());
+            applyUserUpdates(existingUser, request);
 
             if (request.getRole() != null) {
                 Role currentRole = existingUser.getRole();
@@ -125,45 +110,10 @@ public class UserService {
     }
 
     /**
-     * Updates the game statistics of the currently authenticated user.
-     *
-     * @param request the stats to update
-     * @return an {@link EntityModel} containing the updated user profile
-     */
-    public EntityModel<UserResponse> updateCurrentUserStats(UserGameStatsRequest request) {
-        try {
-            String email = getCurrentUserEmail();
-
-            User existingUser = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + email));
-
-            if (request.getCoins() != null) existingUser.setCoins(request.getCoins());
-            if (request.getScore() != null) existingUser.setScore(request.getScore());
-            if (request.getLevel() != null) existingUser.setLevel(request.getLevel());
-            if (request.getXp() != null) existingUser.setXp(request.getXp());
-            if (request.getXpMax() != null) existingUser.setXpMax(request.getXpMax());
-            if (request.getStreak() != null) existingUser.setStreak(request.getStreak());
-            if (request.getCocktailsCompleted() != null) existingUser.setCocktailsCompleted(request.getCocktailsCompleted());
-            if (request.getRankTitle() != null) existingUser.setRankTitle(request.getRankTitle());
-
-            User updatedUser = userRepository.save(existingUser);
-            UserResponse response = UserResponse.fromEntity(updatedUser);
-
-            return EntityModel.of(response,
-                    linkTo(methodOn(UserController.class).getCurrentUserProfile()).withSelfRel());
-
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while updating user stats", e);
-        }
-    }
-
-    /**
      * Set the current authenticated user to dosabled.
      * Throws an exception if the user is not found.
      */
-
+    @Transactional(readOnly = true)
     public EntityModel<UserResponse> getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -175,7 +125,7 @@ public class UserService {
 
     }
 
-
+    @Transactional(readOnly = true)
     public CollectionModel<EntityModel<UserResponse>> getAllUsers() {
 
         List<EntityModel<UserResponse>> users = userRepository.findAll().stream()
@@ -187,31 +137,20 @@ public class UserService {
                 .collect(Collectors.toList());
         return CollectionModel.of(users,
                 linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel(),
-                linkTo(methodOn(UserController.class).getAllUsers()).withRel("places"));
+                linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
     }
 
     public EntityModel<UserResponse> updateUser(Long id, UserRequest request) {
 
-        String currentEmail = getCurrentUserEmail();
-        User currentUser = userRepository.findByEmail(currentEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current user not found"));
+        User currentUser = getCurrentAuthenticatedUser();
+        boolean isAdmin = currentUser.getRole() == Role.Admin;
 
-        if (currentUser.getRole() != Role.Admin) {
+        if (!isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only administrators can update users.");
         }
         User existingUser = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé"));
 
-        if (request.getUsername() != null) {
-            existingUser.setUsername(request.getUsername());
-            String newSlug = slugify.slugify(request.getUsername());
-            existingUser.setSlug(newSlug);
-        }
-
-        if (request.getEmail() != null) existingUser.setEmail(request.getEmail());
-
-        if (request.getPassword() != null) existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        if (request.getBiography() != null) existingUser.setBiography(request.getBiography());
-        if (request.getUserImage() != null) existingUser.setUserImage(request.getUserImage());
+        applyUserUpdates(existingUser, request);
 
         if (request.getRole() != null) {
             existingUser.setRole(request.getRole());
@@ -224,26 +163,41 @@ public class UserService {
                 linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel());
     }
 
-    /**
-     * Retrieves the email of the currently authenticated user from the security context.
-     *
-     * @return the email address of the logged-in user
-     */
-    private String getCurrentUserEmail() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
+    public void deleteUser(Long id) {
+        User userToDelete = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        User currentUser = getCurrentAuthenticatedUser();
+
+        boolean isOwner = userToDelete.getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole() == Role.Admin;
+
+        if (!isOwner && !isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this user.");
         }
+
+        userRepository.delete(userToDelete);
     }
 
-    public Role getCurrentUserRole() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof User)) {
-            return null;
+    private User getCurrentAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
-        User user = (User) auth.getPrincipal();
-        return user.getRole();
+        return (User) principal;
     }
+
+    private void applyUserUpdates(User user, UserRequest request) {
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
+            user.setUsername(request.getUsername());
+            String newSlug = slugify.slugify(request.getUsername());
+            user.setSlug(newSlug);
+        }
+
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getBiography() != null) user.setBiography(request.getBiography());
+        if (request.getUserImage() != null) user.setUserImage(request.getUserImage());
+    }
+
 }

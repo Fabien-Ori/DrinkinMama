@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/contexts/player-context';
 
-// Adresse de votre API Spring Boot
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
 
 export default function LoginScreen() {
     const router = useRouter();
-    const { login } = usePlayer();
-    const [email, setEmail] = useState('');
+    const { login } = useAuth();
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const handleLogin = async () => {
         setErrorMessage('');
 
         try {
-            const cleanEmail = email.trim().toLowerCase();
+            const cleanUsername = username.trim().toLowerCase();
             const cleanPassword = password.trim();
 
             const response = await fetch(`${API_URL}/authenticate`, {
@@ -27,7 +27,7 @@ export default function LoginScreen() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: cleanEmail,
+                    username: cleanUsername,
                     password: cleanPassword,
                 }),
             });
@@ -43,54 +43,42 @@ export default function LoginScreen() {
             }
 
             const data = await response.json();
-            console.log('Connexion réussie, Token JWT :', data.token);
+            console.log('Connexion réussie, Token JWT.');
 
             await login(data.token);
 
-            if (Platform.OS === 'web') {
-                alert("Connexion Réussie ! Votre Token JWT a bien été généré par l'API.");
-                router.push('/');
-            } else {
-                Alert.alert(
-                    "Connexion Réussie !",
-                    "Votre Token JWT a bien été généré par l'API.",
-                    [
-                        {
-                            text: "Super, redirection !",
-                            onPress: () => {
-                                router.push('/');
-                            }
-                        }
-                    ]
-                );
-            }
+            setSuccessMessage("Connexion réalisée avec succès !")
 
+            setTimeout(() => {
+                router.replace('/');
+            }, 600);
         } catch (error) {
             console.error('Erreur lors de la requête :', error);
-            setErrorMessage("Impossible de joindre le serveur. Vérifiez que votre API Spring Boot est lancée.");
+            setErrorMessage("Impossible de joindre le serveur.");
         }
     };
 
-   return (
+    return (
         <View style={styles.container}>
             <View style={styles.formContainer}>
-                <Text style={styles.title}>Drinking Mama</Text>
-                <Text style={styles.subtitle}>Prêt(e) à shaker ? Connectez-vous.</Text>
+                <Text style={styles.title}>Se connecter</Text>
+                <Text style={styles.subtitle}>Connectez-vous pour continuer</Text>
 
                 {errorMessage ? (
                     <Text style={styles.errorText}>{errorMessage}</Text>
                 ) : null}
+                {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Adresse e-mail</Text>
+                    <Text style={styles.label}>Pseudo</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="hello@exemple.com"
+                        placeholder="Nom d'utilisateur"
                         placeholderTextColor={DM.silver}
                         autoCapitalize="none"
-                        keyboardType="email-address"
-                        value={email}
-                        onChangeText={setEmail}
+                        value={username}
+                        onChangeText={setUsername}
                     />
                 </View>
 
@@ -115,7 +103,7 @@ export default function LoginScreen() {
                     onPress={() => router.push('/register')}
                 >
                     <Text style={styles.linkText}>
-                        Nouveau ici ? <Text style={styles.linkTextBold}>Créer un compte</Text>
+                        Pas de compte ? <Text style={styles.linkTextBold}>Créer un compte</Text>
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -162,6 +150,17 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 20,
+        textAlign: 'center',
+        fontWeight: '500',
+        overflow: 'hidden'
+    },
+    successText: {
+        color: DM.success,
+        backgroundColor: '#FFF0ED',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 20,
+        maxWidth: 400,
         textAlign: 'center',
         fontWeight: '500',
         overflow: 'hidden'

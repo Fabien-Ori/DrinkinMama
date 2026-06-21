@@ -2,7 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 
 export function CoinsBadge() {
   const { player, user } = usePlayer();

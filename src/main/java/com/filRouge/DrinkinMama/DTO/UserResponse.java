@@ -18,33 +18,18 @@ public class UserResponse {
     private Role role;
     private String biography;
     private String userImage;
-    private Integer coins;
-    private Integer score;
-    private Integer level;
-    private Integer xp;
-    private Integer xpMax;
-    private Integer streak;
-    private Integer cocktailsCompleted;
-    private String rankTitle;
+    private String slug;
 
     public static UserResponse fromEntity(User user) {
 
-
         return UserResponse.builder()
                 .id(user.getId())
-                .username(user.getProfileUsername())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .biography(user.getBiography())
                 .userImage(user.getUserImage())
-                .coins(user.getCoins())
-                .score(user.getScore())
-                .level(user.getLevel())
-                .xp(user.getXp())
-                .xpMax(user.getXpMax())
-                .streak(user.getStreak())
-                .cocktailsCompleted(user.getCocktailsCompleted())
-                .rankTitle(user.getRankTitle())
+                .slug(user.getSlug())
                 .build();
     }
 

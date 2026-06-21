@@ -1,5 +1,6 @@
 package com.filRouge.DrinkinMama.config;
 
+import com.filRouge.DrinkinMama.service.TokenBlacklistService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -34,6 +35,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * Intercepte et traite chaque requête HTTP pour vérifier l'authentification JWT.
@@ -58,7 +60,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
         final String jwt;
-        final String Usermail;
+        final String username;
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -68,10 +70,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         jwt = authorizationHeader.substring(7);
 
         try {
-            Usermail = jwtService.extractUsername(jwt);
+            if (tokenBlacklistService.isTokenBlacklisted(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Déconnexion\",\"message\":\"Ce jeton a été invalidé par déconnexion.\"}");
+                return;
+            }
 
-            if (Usermail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(Usermail);
+            username = jwtService.extractUsername(jwt);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -86,7 +95,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
-            // Gestion spécifique pour les jetons expirés
+            // Gestion pour les jetons expirés
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Code 401
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"JWT expiré\",\"message\":\"" + e.getMessage() + "\"}");

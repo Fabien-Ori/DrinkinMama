@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActiveToolVisual } from '@/components/dm/tool-visuals';
 import { DM } from '@/constants/dm-theme';
 import { getActionHint } from '@/constants/mock-data';
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function GameScreen() {

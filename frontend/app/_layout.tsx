@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { DM } from '@/constants/dm-theme';
-import { PlayerProvider } from '@/contexts/player-context';
+import { PlayerProvider } from '@/context/player-context';
+import {AuthProvider} from "@/context/AuthContext";
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -24,16 +25,18 @@ const DrinkingMamaTheme = {
 
 export default function RootLayout() {
   return (
-    <PlayerProvider>
-      <ThemeProvider value={DrinkingMamaTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="authentification" options={{ headerShown: false }} />
-          <Stack.Screen name="register" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="dark" />
-      </ThemeProvider>
-    </PlayerProvider>
+      <AuthProvider>
+        <PlayerProvider>
+          <ThemeProvider value={DrinkingMamaTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="authentification" options={{ headerShown: false }} />
+              <Stack.Screen name="register" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            </Stack>
+            <StatusBar style="dark" />
+          </ThemeProvider>
+        </PlayerProvider>
+      </AuthProvider>
   );
 }

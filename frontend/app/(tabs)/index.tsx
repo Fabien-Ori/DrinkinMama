@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 
 export default function HomeScreen() {
   const router = useRouter();

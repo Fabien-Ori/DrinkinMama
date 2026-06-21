@@ -5,8 +5,6 @@ import com.filRouge.DrinkinMama.DTO.AuthenticationRequest;
 import com.filRouge.DrinkinMama.DTO.AuthenticationResponse;
 import com.filRouge.DrinkinMama.DTO.UserRequest;
 import com.filRouge.DrinkinMama.config.JwtService;
-//import com.projetfilrougeapi.apifilrouge.endpoint_api.category.Category;
-//import com.projetfilrougeapi.apifilrouge.endpoint_api.category.CategoryRepository;
 import com.filRouge.DrinkinMama.entity.user.AuthProvider;
 import com.filRouge.DrinkinMama.entity.user.Role;
 import com.filRouge.DrinkinMama.entity.user.User;
@@ -16,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 /**
  * Service qui gère les opérations d'authentification des utilisateurs.
@@ -33,6 +32,8 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final Slugify slugify = Slugify.builder().build();
+
+
     /**
      * Enregistre un nouvel utilisateur dans le système.
      *
@@ -40,15 +41,11 @@ public class AuthenticationService {
      * @return Une réponse contenant le token JWT généré pour l'utilisateur enregistré
      */
     public AuthenticationResponse register(UserRequest request) throws Exception {
-        repository.findByEmail(request.getEmail()).ifPresent(
+        repository.findByUsername(request.getUsername()).ifPresent(
                 user -> {
-                    throw new RuntimeException("Email already exists");
+                    throw new RuntimeException("Username already exists");
                 }
         );
-        /*List<Category> categories = new ArrayList<>();
-        if (request.getCategoryKeys() != null) {
-            categories = categoryRepository.findByKeyIn(request.getCategoryKeys());
-        }*/
         String generatedSlug = slugify.slugify(request.getUsername());
 
         User user = User.builder()
@@ -68,6 +65,7 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .build();
     }
+
     /**
      * Authentifie un utilisateur existant.
      *
@@ -76,8 +74,7 @@ public class AuthenticationService {
      * @throws org.springframework.security.core.AuthenticationException Si l'authentification échoue
      */
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        // Retrieve the user by email
-        var user = repository.findByEmail(request.getEmail())
+        var user = repository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // If the user's role is Banned, block the authentication
@@ -88,7 +85,7 @@ public class AuthenticationService {
         // Authenticate user's credentials (email and password)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        request.getUsername(),
                         request.getPassword())
         );
 

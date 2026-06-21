@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 
 import { DM } from '@/constants/dm-theme';
 
-import { usePlayer } from '@/contexts/player-context';
+import { usePlayer } from '@/context/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 
 export default function ProfileScreen() {

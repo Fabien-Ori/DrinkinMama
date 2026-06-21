@@ -25,14 +25,14 @@ public class ApplicationConfig {
     private final UserRepository userRepository;
     /**
      * Définit le service de détails utilisateur qui récupère les informations
-     * des utilisateurs par leur email.
+     * des utilisateurs par leur username.
      *
      * @return Un service implémentant UserDetailsService
      * @throws UsernameNotFoundException Si aucun utilisateur n'est trouvé avec l'email fourni
      */
     @Bean
-    public UserDetailsService customUserDetailsService() { // Nom différent
-        return username -> userRepository.findByEmail(username)
+    public UserDetailsService customUserDetailsService() {
+        return username -> userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
     /**
