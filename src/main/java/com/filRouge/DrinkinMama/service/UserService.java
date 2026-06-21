@@ -179,7 +179,7 @@ public class UserService {
         userRepository.delete(userToDelete);
     }
 
-    private User getCurrentAuthenticatedUser() {
+    public User getCurrentAuthenticatedUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof User)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");

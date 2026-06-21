@@ -24,8 +24,8 @@ export default function LeaderboardScreen() {
   const [usersList, setUsersList] = useState<LeaderboardPlayer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
-  const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/auth';
+  const BASE_API_URL = API_URL.replace('/auth', '');
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { DM } from '@/constants/dm-theme';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/auth';
 
 export default function LoginScreen() {
     const router = useRouter();

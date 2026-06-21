@@ -16,10 +16,10 @@ public enum Permission {
     USER_CREATE("user:create"),
     USER_DELETE("user:delete"),
 
-    AUTH_SERVICE_READ("auth:read"),
-    AUTH_SERVICE_UPDATE("auth:update"),
-    AUTH_SERVICE_CREATE("auth:create"),
-    AUTH_SERVICE_DELETE("auth:delete"),
+    LEVEL_DESIGNER_READ("level:read"),
+    LEVEL_DESIGNER_UPDATE("level:update"),
+    LEVEL_DESIGNER_CREATE("level:create"),
+    LEVEL_DESIGNER_DELETE("level:delete"),
     ;
 
     @Getter

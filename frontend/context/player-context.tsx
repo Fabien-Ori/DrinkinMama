@@ -165,12 +165,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<DbUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/api/v1/auth';
-  const BASE_API_URL = API_URL.replace('/api/v1/auth', '');
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090/auth';
+  const BASE_API_URL = API_URL.replace('/auth', '');
 
   const fetchGameData = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_API_URL}/api/v1/game/data`);
+      const response = await fetch(`${BASE_API_URL}/game/data`);
       if (response.ok) {
         const data = await response.json();
         if (data.cocktails && data.cocktails.length > 0) {

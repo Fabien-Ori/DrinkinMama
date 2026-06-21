@@ -14,11 +14,11 @@ import static com.filRouge.DrinkinMama.entity.user.Permission.*;
 
 @RequiredArgsConstructor
 public enum Role {
-    AuthService(Set.of(
-            AUTH_SERVICE_CREATE,
-            AUTH_SERVICE_READ,
-            AUTH_SERVICE_UPDATE,
-            AUTH_SERVICE_DELETE
+    LevelDesigner(Set.of(
+            LEVEL_DESIGNER_CREATE,
+            LEVEL_DESIGNER_READ,
+            LEVEL_DESIGNER_UPDATE,
+            LEVEL_DESIGNER_DELETE
     )),
     User(Set.of(
             USER_READ,

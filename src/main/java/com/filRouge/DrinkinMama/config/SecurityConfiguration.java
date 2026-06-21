@@ -45,7 +45,7 @@ public class SecurityConfiguration {
      * Liste des URL accessibles sans authentification.
      */
     private static final String[] WHITE_LIST_URL = {
-            "/api/v1/auth/**",
+            "/auth/**",
             "/error"
     };
 
@@ -112,6 +112,11 @@ public class SecurityConfiguration {
 
                             .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("Admin")
 
+                            .requestMatchers(HttpMethod.GET, "/cocktails/**").hasAnyRole("User", "Admin")
+                            .requestMatchers(HttpMethod.POST, "/cocktails/**").hasAnyRole("LevelDesigner")
+                            .requestMatchers(HttpMethod.PATCH, "/cocktails/**").hasAnyRole("LevelDesigner")
+                            .requestMatchers(HttpMethod.DELETE, "/cocktails/**").hasAnyRole("LevelDesigner")
+
                             .anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -119,7 +124,7 @@ public class SecurityConfiguration {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .logout(logout -> logout
-                        .logoutUrl("/api/v1/auth/logout")
+                        .logoutUrl("/auth/logout")
                         .addLogoutHandler((request, response, authentication) -> {
                             String authHeader = request.getHeader("Authorization");
                             if (authHeader != null && authHeader.startsWith("Bearer ")) {

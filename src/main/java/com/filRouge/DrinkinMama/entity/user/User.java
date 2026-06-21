@@ -59,11 +59,6 @@ public class User implements UserDetails {
     @Column(name = "avatar_color", length = 20)
     private String avatarColor;
 
-    @Column(name = "is_me")
-    private Boolean isMe;
-
-    // --- Adaptations pour UserDetails ---
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role != null ? role.getAuthorities() : null;

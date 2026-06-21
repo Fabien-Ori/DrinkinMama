@@ -1,101 +1,143 @@
-// frontend/app/(tabs)/mixodex.tsx
-
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/context/player-context';
+import { useAuth } from '@/context/AuthContext'; // On utilise useAuth
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090';
 
 export default function MixodexScreen() {
   const router = useRouter();
-  const { player, cocktails, startGame } = usePlayer();
+  const { userToken } = useAuth(); // Récupération du token
   const [search, setSearch] = useState('');
+  const [cocktails, setCocktails] = useState([]);
+
+  useEffect(() => {
+    const fetchCocktails = async () => {
+      try {
+        const response = await fetch(`${API_URL}/cocktails`, {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        const data = await response.json();
+
+        console.log("Données reçues :", Object.keys(data._embedded));
+
+        const embedded = data._embedded;
+        const key = Object.keys(embedded)[0];
+        setCocktails(embedded[key]);
+
+      } catch (error) {
+        console.error("Erreur:", error);
+      }
+    };
+    fetchCocktails();
+  }, [userToken]);
 
   const filtered = useMemo(
-    () => cocktails.filter((c) => c.name.toLowerCase().includes(search.toLowerCase())),
-    [cocktails, search],
+      () => cocktails.filter((c: any) => c.name.toLowerCase().includes(search.toLowerCase())),
+      [cocktails, search],
   );
 
-  const handleCocktailPress = (id: string, locked: boolean) => {
+  const unlockedCount = cocktails.filter((c: any) => !c.locked).length;
+
+  const handleCocktailPress = async (id: string, locked: boolean) => {
     if (locked) return;
-    startGame(id);
-    router.push('/game');
+
+    try {
+      const response = await fetch(`${API_URL}/cocktails/${id}/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const sessionData = await response.json();
+
+      router.push({
+        pathname: '/game',
+        params: {
+          cocktailId: id
+        }
+      });
+    } catch (error) {
+      console.error("Erreur démarrage:", error);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      
-      {/* EN-TÊTE AVEC LE NOUVEAU COMPOSANT */}
-      <View style={styles.header}>
-        <View style={styles.titleGroup}>
-          <Text style={styles.title}>Mixodex</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>
-              {player.mixodexUnlocked} / {player.mixodexTotal}
-            </Text>
-          </View>
-        </View>
-        <GlobalHeaderRight />
-      </View>
+      <SafeAreaView style={styles.safe} edges={['top']}>
 
-      <View style={styles.searchWrap}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher un cocktail..."
-          placeholderTextColor={DM.muted}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.grid}>
-        {filtered.map((cocktail) => (
-          <Pressable
-            key={cocktail.id}
-            style={[styles.card, cocktail.locked && styles.cardLocked]}
-            onPress={() => handleCocktailPress(cocktail.id, cocktail.locked)}>
-            
-            <View style={styles.thumb}>
-              {cocktail.imageUrl ? (
-                <Image source={{ uri: cocktail.imageUrl }} style={styles.image} resizeMode="cover" />
-              ) : (
-                <Text style={styles.emoji}>{cocktail.emoji}</Text>
-              )}
-
-              {cocktail.locked ? (
-                <View style={styles.lockedOverlay}>
-                  <MaterialIcons name="lock" size={28} color="#FFFFFF" />
-                </View>
-              ) : (
-                <View style={styles.stars}>
-                  {[1, 2, 3].map((i) => (
-                    <MaterialIcons
-                      key={i}
-                      name={i <= cocktail.stars ? 'star' : 'star-border'}
-                      size={12}
-                      color={i <= cocktail.stars ? DM.gold : '#FFFFFF'}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <View style={styles.info}>
-              <Text style={[styles.name, cocktail.locked && styles.nameLocked]}>{cocktail.name}</Text>
-              <Text style={styles.meta}>
-                {cocktail.locked
-                  ? cocktail.lockReason
-                  : `${cocktail.points} pts · Niveau ${cocktail.level}`}
+        <View style={styles.header}>
+          <View style={styles.titleGroup}>
+            <Text style={styles.title}>Mixodex</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>
+                {unlockedCount} / {cocktails.length}
               </Text>
             </View>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+          </View>
+          <GlobalHeaderRight />
+        </View>
+
+        <View style={styles.searchWrap}>
+          <TextInput
+              style={styles.searchInput}
+              placeholder="Rechercher un cocktail..."
+              placeholderTextColor={DM.muted}
+              value={search}
+              onChangeText={setSearch}
+          />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.grid}>
+          {filtered.map((item: any) => (
+              <Pressable
+                  key={item.content?.id ?? item.id}
+                  style={[styles.card, (item.content?.locked ?? item.locked) && styles.cardLocked]}
+                  onPress={() => handleCocktailPress(item.content?.id ?? item.id, item.content?.locked ?? item.locked)}
+              >
+                <View style={styles.thumb}>
+                  {item.imageUrl ? (
+                      <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" />
+                  ) : (
+                      <Text style={styles.emoji}>{item.emoji}</Text>
+                  )}
+
+                  {item.locked ? (
+                      <View style={styles.lockedOverlay}>
+                        <MaterialIcons name="lock" size={28} color="#FFFFFF" />
+                      </View>
+                  ) : (
+                      <View style={styles.stars}>
+                        {[1, 2, 3].map((i) => (
+                            <MaterialIcons
+                                key={i}
+                                name={i <= item.stars ? 'star' : 'star-border'}
+                                size={12}
+                                color={i <= item.stars ? DM.gold : '#FFFFFF'}
+                            />
+                        ))}
+                      </View>
+                  )}
+                </View>
+
+                <View style={styles.info}>
+                  <Text style={[styles.name, item.locked && styles.nameLocked]}>{item.name}</Text>
+                  <Text style={styles.meta}>
+                    {item.locked
+                        ? item.lockReason
+                        : `${item.points} pts · Niveau ${item.level}`}
+                  </Text>
+                </View>
+              </Pressable>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
   );
 }
 
