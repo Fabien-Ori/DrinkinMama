@@ -25,7 +25,6 @@ export default function GameScreen() {
     performAction,
     availableTools,
     availableIngredients,
-    user,
   } = usePlayer();
 
   // État pour masquer/afficher les panneaux latéraux
@@ -88,16 +87,12 @@ export default function GameScreen() {
               <Text style={styles.rewardLabel}>Gains de la partie</Text>
               <Text style={styles.rewardValue}>+ {gameSession.sessionPoints} 🪙</Text>
               <View style={styles.divider} />
-              {user ? (
-                <Text style={styles.totalLabel}>Solde actuel : {player?.coins || 0} 🪙</Text>
-              ) : (
-                <Text style={styles.totalLabel}>Connectez-vous pour conserver vos gains !</Text>
-              )}
+              <Text style={styles.totalLabel}>Solde actuel : {player?.coins || 0} 🪙</Text>
             </View>
 
             <View style={styles.actionsContainer}>
               <Pressable style={({ pressed }) => [styles.primaryBtn, pressed && styles.pressed]} onPress={handleReplay}>
-                <MaterialIcons name="replay" size={20} color="#FFFFFF" />
+                <MaterialIcons name="replay" size={20} color={DM.surface} />
                 <Text style={styles.primaryBtnText}>Rejouer ce cocktail</Text>
               </Pressable>
 
@@ -128,7 +123,7 @@ export default function GameScreen() {
           </Text>
         </View>
         <View style={styles.pointsBadge}>
-          <MaterialIcons name="monetization-on" size={13} color={DM.gold} />
+          <MaterialIcons name="monetization-on" size={14} color={DM.gold} />
           <Text style={styles.pointsText}>{gameSession.sessionPoints} pts</Text>
         </View>
         <GlobalHeaderRight />
@@ -162,7 +157,7 @@ export default function GameScreen() {
                     onPress={() => selectTool(tool.id)}>
                     <MaterialIcons
                       name={tool.icon as 'local-bar'}
-                      size={16}
+                      size={24} // Agrandissement icône
                       color={active ? DM.gold : tool.fromShop ? DM.goldLight : DM.muted}
                     />
                     <Text style={[styles.toolLabel, active && styles.toolLabelActive]}>{tool.label}</Text>
@@ -171,15 +166,13 @@ export default function GameScreen() {
                 );
               })}
             </ScrollView>
-            {/* Bouton pour masquer le panneau outils */}
             <Pressable style={styles.collapseBtn} onPress={() => setToolsVisible(false)}>
-              <MaterialIcons name="chevron-left" size={14} color={DM.muted} />
+              <MaterialIcons name="chevron-left" size={18} color={DM.muted} />
             </Pressable>
           </View>
         ) : (
-          /* Tab réduit pour réouvrir le panneau outils */
           <Pressable style={styles.expandTab} onPress={() => setToolsVisible(true)}>
-            <MaterialIcons name="chevron-right" size={14} color={DM.gold} />
+            <MaterialIcons name="chevron-right" size={18} color={DM.gold} />
             <Text style={styles.expandTabText}>Outils</Text>
           </Pressable>
         )}
@@ -189,7 +182,7 @@ export default function GameScreen() {
           <Pressable style={styles.toolDisplay} onPress={performAction}>
             <ActiveToolVisual tool={selectedTool} fillLevel={fillLevel} />
             <View style={styles.tapHint}>
-              <MaterialIcons name="touch-app" size={12} color={DM.gold} />
+              <MaterialIcons name="touch-app" size={16} color={DM.gold} />
               <Text style={styles.tapHintText}>{getActionHint(selectedTool)}</Text>
             </View>
           </Pressable>
@@ -198,7 +191,7 @@ export default function GameScreen() {
               {selectedIng.emoji ? (
                 <Text style={styles.ingredientEmoji}>{selectedIng.emoji}</Text>
               ) : (
-                <MaterialIcons name={selectedIng.icon as 'eco'} size={12} color="#fff" />
+                <MaterialIcons name={selectedIng.icon as 'eco'} size={16} color="#fff" />
               )}
               <Text style={styles.ingredientBadgeText}>{selectedIng.label} sélec.</Text>
             </View>
@@ -208,9 +201,8 @@ export default function GameScreen() {
         {/* ── Panneau RECETTE (droite) ── */}
         {recipeVisible ? (
           <View style={styles.recipePanelWrapper}>
-            {/* Bouton pour masquer le panneau recette */}
             <Pressable style={styles.collapseBtn} onPress={() => setRecipeVisible(false)}>
-              <MaterialIcons name="chevron-right" size={14} color={DM.muted} />
+              <MaterialIcons name="chevron-right" size={18} color={DM.muted} />
             </Pressable>
             <View style={styles.recipePanel}>
               <Text style={styles.panelLabel}>Recette</Text>
@@ -231,7 +223,7 @@ export default function GameScreen() {
                     </Text>
                     <Text style={styles.stepPts}>+{step.points} pts</Text>
                     {done && (
-                      <MaterialIcons name="check" size={10} color={DM.success} style={styles.stepCheck} />
+                      <MaterialIcons name="check" size={14} color={DM.success} style={styles.stepCheck} />
                     )}
                   </View>
                 );
@@ -239,14 +231,14 @@ export default function GameScreen() {
             </View>
           </View>
         ) : (
-          /* Tab réduit pour réouvrir le panneau recette */
           <Pressable style={[styles.expandTab, styles.expandTabRight]} onPress={() => setRecipeVisible(true)}>
             <Text style={styles.expandTabText}>Recette</Text>
-            <MaterialIcons name="chevron-left" size={14} color={DM.gold} />
+            <MaterialIcons name="chevron-left" size={18} color={DM.gold} />
           </Pressable>
         )}
       </View>
 
+      {/* ── Barre INGRÉDIENTS (Bas) ── */}
       <View style={styles.shelf}>
         <Text style={styles.shelfLabel}>Ingrédients disponibles</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelfScroll}>
@@ -266,7 +258,7 @@ export default function GameScreen() {
                 ) : (
                   <MaterialIcons
                     name={ing.icon as 'eco'}
-                    size={18}
+                    size={28} // Agrandissement icône
                     color={selected ? DM.tealLight : DM.muted}
                   />
                 )}
@@ -286,78 +278,78 @@ const styles = StyleSheet.create({
   emptyText: { color: DM.muted },
   header: {
     backgroundColor: DM.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16, // Agrandissement
+    paddingVertical: 14, // Agrandissement
     borderBottomWidth: 0.5,
     borderBottomColor: DM.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  recipeTitle: { fontSize: 14, fontWeight: '500', color: DM.text },
-  stepMeta: { fontSize: 10, color: DM.muted },
+  recipeTitle: { fontSize: 16, fontWeight: '700', color: DM.text }, // Agrandissement
+  stepMeta: { fontSize: 12, color: DM.muted, marginTop: 2 }, // Agrandissement
   pointsBadge: {
     backgroundColor: DM.goldDark,
     borderWidth: 0.5,
     borderColor: DM.gold,
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  pointsText: { fontSize: 12, color: DM.goldLight },
-  progressContainer: { paddingHorizontal: 12, paddingVertical: 6 },
+  pointsText: { fontSize: 13, fontWeight: '600', color: DM.gold }, // Agrandissement
+  progressContainer: { paddingHorizontal: 16, paddingVertical: 10 },
   progressTrack: {
     backgroundColor: DM.surface,
     borderRadius: 4,
-    height: 4,
+    height: 6, // Agrandissement
     overflow: 'hidden',
     borderWidth: 0.5,
     borderColor: DM.border,
   },
   progressFill: { backgroundColor: DM.gold, height: '100%', borderRadius: 4 },
-  progressLabel: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 },
-  progressMuted: { fontSize: 9, color: DM.muted },
-  gameBody: { flex: 1, flexDirection: 'row', padding: 8, gap: 6 },
+  progressLabel: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  progressMuted: { fontSize: 11, color: DM.muted },
+  gameBody: { flex: 1, flexDirection: 'row', padding: 12, gap: 10 },
 
   // ── Panneau Outils ──
   toolsPanelWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
   },
   toolsPanel: {
-    width: 56,
+    width: 76, // Agrandissement (était 56)
     backgroundColor: DM.surface,
     borderWidth: 0.5,
     borderColor: DM.border,
-    borderRadius: 12,
+    borderRadius: 14,
   },
-  toolsPanelContent: { padding: 6, gap: 6 },
+  toolsPanelContent: { padding: 8, gap: 10 },
 
   // ── Panneau Recette ──
   recipePanelWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
   },
   recipePanel: {
-    width: 80,
+    width: 120, // Agrandissement (était 80)
     backgroundColor: DM.surface,
     borderWidth: 0.5,
     borderColor: DM.border,
-    borderRadius: 12,
-    padding: 8,
-    gap: 6,
+    borderRadius: 14,
+    padding: 10,
+    gap: 8,
   },
 
   // ── Bouton collapse ──
   collapseBtn: {
-    width: 16,
-    height: 40,
-    backgroundColor: DM.card,
+    width: 22, // Agrandissement
+    height: 50, // Agrandissement
+    backgroundColor: DM.surface,
     borderWidth: 0.5,
     borderColor: DM.border,
     borderRadius: 8,
@@ -367,113 +359,119 @@ const styles = StyleSheet.create({
 
   // ── Tab réduit ──
   expandTab: {
-    width: 20,
+    width: 26, // Agrandissement
     backgroundColor: DM.surface,
     borderWidth: 0.5,
     borderColor: DM.border,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 10,
+    gap: 6,
+    paddingVertical: 16,
   },
   expandTabRight: {},
   expandTabText: {
-    fontSize: 8,
+    fontSize: 10, // Agrandissement
+    fontWeight: '600',
     color: DM.gold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     writingDirection: 'ltr',
     transform: [{ rotate: '90deg' }],
-    width: 48,
+    width: 60,
     textAlign: 'center',
   },
 
   panelLabel: {
-    fontSize: 9,
+    fontSize: 11, // Agrandissement
+    fontWeight: '700',
     color: DM.muted,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     textAlign: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   toolBtn: {
     backgroundColor: DM.card,
     borderWidth: 0.5,
     borderColor: DM.border,
-    borderRadius: 8,
-    padding: 5,
+    borderRadius: 10,
+    padding: 10, // Agrandissement
     alignItems: 'center',
     position: 'relative',
   },
   toolBtnActive: { borderColor: DM.gold, backgroundColor: DM.goldDark },
-  toolBtnShop: { borderColor: 'rgba(230,168,23,0.4)' },
-  toolLabel: { fontSize: 8, color: DM.muted, marginTop: 2, textAlign: 'center' },
-  toolLabelActive: { color: DM.goldLight },
-  shopTag: { position: 'absolute', top: 2, right: 3, fontSize: 7, color: DM.gold },
-  gameCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  toolBtnShop: { borderColor: 'rgba(197, 106, 83, 0.4)' }, // Remplacé avec l'or "Greige"
+  toolLabel: { fontSize: 10, color: DM.muted, marginTop: 4, textAlign: 'center' }, // Agrandissement
+  toolLabelActive: { color: DM.gold, fontWeight: '600' },
+  shopTag: { position: 'absolute', top: 4, right: 4, fontSize: 10, color: DM.gold }, // Agrandissement
+  
+  gameCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   toolDisplay: { alignItems: 'center' },
-  tapHint: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
-  tapHintText: { fontSize: 9, color: DM.gold },
+  tapHint: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
+  tapHintText: { fontSize: 12, fontWeight: '600', color: DM.gold }, // Agrandissement
   ingredientBadge: {
     backgroundColor: DM.teal,
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     marginTop: 24,
   },
-  ingredientBadgeText: { fontSize: 10, color: '#fff' },
-  ingredientEmoji: { fontSize: 12 },
+  ingredientBadgeText: { fontSize: 12, fontWeight: '600', color: DM.surface }, // Agrandissement
+  ingredientEmoji: { fontSize: 16 }, // Agrandissement
+  
   recipeStep: {
     backgroundColor: DM.card,
     borderWidth: 0.5,
     borderColor: DM.border,
-    borderRadius: 8,
-    padding: 6,
+    borderRadius: 10,
+    padding: 10, // Agrandissement
     position: 'relative',
   },
   recipeStepDone: { borderColor: DM.success, backgroundColor: DM.successDark },
   recipeStepCurrent: { borderColor: DM.gold, backgroundColor: DM.goldDark },
-  stepNum: { fontSize: 8, color: DM.muted, textTransform: 'uppercase', marginBottom: 2 },
-  stepLabel: { fontSize: 9, color: DM.muted, lineHeight: 12 },
+  stepNum: { fontSize: 10, fontWeight: '600', color: DM.muted, textTransform: 'uppercase', marginBottom: 4 }, // Agrandissement
+  stepLabel: { fontSize: 11, color: DM.text, lineHeight: 16 }, // Agrandissement
   stepLabelDone: { color: DM.success },
-  stepLabelCurrent: { color: DM.goldLight },
-  stepPts: { fontSize: 8, color: DM.gold, marginTop: 2 },
-  stepCheck: { position: 'absolute', top: 4, right: 4 },
+  stepLabelCurrent: { color: DM.gold, fontWeight: '600' },
+  stepPts: { fontSize: 10, fontWeight: '600', color: DM.gold, marginTop: 4 }, // Agrandissement
+  stepCheck: { position: 'absolute', top: 6, right: 6 },
+  
   shelf: {
     backgroundColor: DM.surface,
     borderTopWidth: 0.5,
     borderTopColor: DM.border,
-    padding: 8,
+    padding: 14, // Agrandissement
   },
   shelfLabel: {
-    fontSize: 9,
+    fontSize: 12, // Agrandissement
+    fontWeight: '700',
     color: DM.muted,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 10,
   },
-  shelfScroll: { gap: 6, paddingBottom: 2 },
+  shelfScroll: { gap: 10, paddingBottom: 4 },
   ingredientChip: {
     backgroundColor: DM.card,
     borderWidth: 0.5,
     borderColor: DM.border,
-    borderRadius: 8,
-    padding: 5,
+    borderRadius: 12,
+    padding: 10, // Agrandissement
     alignItems: 'center',
-    minWidth: 44,
+    minWidth: 64, // Agrandissement (était 44)
   },
   ingredientChipSelected: { borderColor: DM.tealLight, backgroundColor: DM.tealDark },
-  ingredientChipShop: { borderColor: 'rgba(230,168,23,0.35)' },
-  chipEmoji: { fontSize: 18 },
-  chipLabel: { fontSize: 8, color: DM.muted, marginTop: 2 },
-  chipLabelSelected: { color: DM.tealLight },
+  ingredientChipShop: { borderColor: 'rgba(197, 106, 83, 0.4)' },
+  chipEmoji: { fontSize: 26 }, // Agrandissement (était 18)
+  chipLabel: { fontSize: 10, fontWeight: '500', color: DM.muted, marginTop: 4 }, // Agrandissement
+  chipLabelSelected: { color: DM.teal, fontWeight: '700' },
 
-  // ── Styles Écran de Victoire ──
+  // ── Styles Écran de Victoire (Inchangé) ──
   victoryContainer: {
     flex: 1,
     backgroundColor: DM.bg,
@@ -500,7 +498,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
     borderWidth: 4,
-    borderColor: '#FFFFFF',
+    borderColor: DM.surface,
     shadowColor: DM.gold,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -530,6 +528,7 @@ const styles = StyleSheet.create({
   },
   rewardLabel: {
     fontSize: 12,
+    fontWeight: '600',
     color: DM.muted,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -566,7 +565,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryBtnText: {
-    color: '#FFFFFF',
+    color: DM.surface,
     fontSize: 16,
     fontWeight: '700',
   },
