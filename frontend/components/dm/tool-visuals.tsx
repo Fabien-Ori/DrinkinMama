@@ -1,7 +1,6 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StyleSheet, Text, View } from 'react-native';
-
 import { DM } from '@/constants/dm-theme';
-import { ToolId } from '@/constants/mock-data';
 
 interface ToolVisualProps {
   fillLevel?: number;
@@ -9,14 +8,14 @@ interface ToolVisualProps {
 
 export function GlassVisual({ fillLevel = 0.45 }: ToolVisualProps) {
   return (
-    <View style={glass.wrapper}>
-      <View style={glass.rim} />
-      <View style={glass.body}>
-        <View style={[glass.liquidBottom, { height: `${fillLevel * 100}%` }]} />
-        <View style={[glass.liquidMid, { height: `${fillLevel * 55}%` }]} />
+      <View style={glass.wrapper}>
+        <View style={glass.rim} />
+        <View style={glass.body}>
+          <View style={[glass.liquidBottom, { height: `${fillLevel * 100}%` }]} />
+          <View style={[glass.liquidMid, { height: `${fillLevel * 55}%` }]} />
+        </View>
+        <View style={glass.straw} />
       </View>
-      <View style={glass.straw} />
-    </View>
   );
 }
 
@@ -25,37 +24,40 @@ export function ShakerVisual({ premium = false }: { premium?: boolean }) {
   const bodyBg = premium ? DM.goldDark : DM.card;
 
   return (
-    <View style={shaker.wrapper}>
-      <View style={[shaker.cap, { backgroundColor: accent, opacity: premium ? 1 : 0.7 }]} />
-      <View style={[shaker.body, { borderColor: accent, backgroundColor: bodyBg }]}>
-        <View style={[shaker.liquid, { backgroundColor: premium ? 'rgba(230,168,23,0.35)' : 'rgba(93,202,165,0.25)' }]} />
-        {premium && <Text style={shaker.sparkle}>✨</Text>}
+      <View style={shaker.wrapper}>
+        <View style={[shaker.cap, { backgroundColor: accent, opacity: premium ? 1 : 0.7 }]} />
+        <View style={[shaker.body, { borderColor: accent, backgroundColor: bodyBg }]}>
+          <View style={[shaker.liquid, { backgroundColor: premium ? 'rgba(230,168,23,0.35)' : 'rgba(93,202,165,0.25)' }]} />
+          {premium && <Text style={shaker.sparkle}>✨</Text>}
+        </View>
+        <View style={[shaker.base, { backgroundColor: accent, opacity: 0.5 }]} />
       </View>
-      <View style={[shaker.base, { backgroundColor: accent, opacity: 0.5 }]} />
-    </View>
   );
 }
 
 export function MortarVisual() {
   return (
-    <View style={mortar.wrapper}>
-      <View style={mortar.bowl}>
-        <View style={mortar.herbs} />
-        <View style={mortar.crushed} />
+      <View style={mortar.wrapper}>
+        <View style={mortar.bowl}>
+          <View style={mortar.herbs} />
+          <View style={mortar.crushed} />
+        </View>
+        <View style={mortar.pestle} />
       </View>
-      <View style={mortar.pestle} />
-    </View>
   );
 }
 
-export function ActiveToolVisual({ tool, fillLevel }: { tool: ToolId; fillLevel?: number }) {
-  switch (tool) {
+export function ActiveToolVisual({ tool, fillLevel }: { tool: string | null | undefined; fillLevel?: number }) {
+  const toolLabel = tool ? tool.toLowerCase().replace(/\s+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "") : 'verre';
+
+  switch (toolLabel) {
     case 'mortar':
       return <MortarVisual />;
     case 'shaker':
       return <ShakerVisual />;
     case 'golden-shaker':
       return <ShakerVisual premium />;
+    case 'verre':
     default:
       return <GlassVisual fillLevel={fillLevel} />;
   }

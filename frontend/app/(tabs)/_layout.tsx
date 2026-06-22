@@ -2,8 +2,7 @@ import { Tabs, Redirect } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { DM } from '@/constants/dm-theme';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { usePlayer } from '@/context/player-context';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TabLayout() {
   const { userToken, isLoading } = useAuth();

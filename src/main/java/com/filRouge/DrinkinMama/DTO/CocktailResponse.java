@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,7 +25,16 @@ public class CocktailResponse {
     private Boolean locked;
     private String lockReason;
 
+    private List<RecipeStepDTO> recipe;
+
     public static CocktailResponse fromEntity(Cocktail cocktail, boolean isLocked) {
+        List<RecipeStepDTO> steps = null;
+        if (cocktail.getRecipeSteps() != null) {
+            steps = cocktail.getRecipeSteps().stream()
+                    .map(RecipeStepDTO::fromEntity)
+                    .collect(Collectors.toList());
+        }
+
         return CocktailResponse.builder()
                 .id(cocktail.getId())
                 .slug(cocktail.getSlug())
@@ -34,6 +46,7 @@ public class CocktailResponse {
                 .stars(cocktail.getStars())
                 .locked(isLocked)
                 .lockReason(isLocked ? cocktail.getLockReason() : null)
+                .recipe(steps)
                 .build();
     }
 }

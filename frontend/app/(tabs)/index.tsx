@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
 import { useAuth } from '@/context/AuthContext';
-import { usePlayer } from '@/context/player-context';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090';
 
@@ -218,11 +217,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
-  /* NOUVEAUX STYLES POUR L'IMAGE DU COCKTAIL DU JOUR */
   heroImageContainer: {
     width: 90,
     height: 90,
-    borderRadius: 45, // Rend l'image parfaitement ronde
+    borderRadius: 45,
     overflow: 'hidden',
     marginBottom: 12,
     backgroundColor: '#F0F0F0',

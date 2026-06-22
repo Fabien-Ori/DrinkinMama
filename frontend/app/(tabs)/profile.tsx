@@ -102,17 +102,19 @@ export default function ProfileScreen() {
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      const response = await fetch(`${API_URL}/users/${user?.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${userToken}` },
-      });
-      if (response.ok) {
-        await logout();
-        setIsDeleteModalVisible(false);
-        router.replace('/authentification');
-      }
-    } catch (e) { Alert.alert("Erreur", "Impossible de contacter le serveur."); }
+    // 1. On lance la requête sans condition avant
+    fetch(`${API_URL}/users/${user?.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      },
+    }).catch(e => console.error(e));
+
+    // 2. On déconnecte immédiatement pour libérer l'UI
+    await logout();
+    setIsDeleteModalVisible(false);
+    router.replace('/authentification');
   };
 
   const handleCloseEditModal = () => {

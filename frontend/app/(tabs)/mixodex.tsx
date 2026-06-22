@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
 import { DM } from '@/constants/dm-theme';
-import { useAuth } from '@/context/AuthContext'; // On utilise useAuth
+import { useAuth } from '@/context/AuthContext';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090';
 
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   cardLocked: { opacity: 0.7 },
   thumb: {
-    height: 160, 
+    height: 160,
     width: '100%',
     backgroundColor: '#F0F0F0',
     alignItems: 'center',
@@ -228,11 +228,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emoji: { fontSize: 40 },
-  stars: { 
-    position: 'absolute', 
-    top: 10, 
-    right: 10, 
-    flexDirection: 'row', 
+  stars: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
     gap: 2,
     backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 6,

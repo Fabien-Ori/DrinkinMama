@@ -1,19 +1,42 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
 
 import { DM } from '@/constants/dm-theme';
-import { usePlayer } from '@/context/player-context';
+import { useAuth } from '@/context/AuthContext';
+
+const BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090').replace(/\/$/, '');
 
 export function CoinsBadge() {
-  const { player, user } = usePlayer();
+  const { userToken } = useAuth();
+  const [coins, setCoins] = useState<number | null>(null);
 
-  if (!user) return null;
+  const fetchUserCoins = useCallback(async () => {
+    if (!userToken) return;
+    try {
+      const response = await fetch(`${BASE_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCoins(data.score ?? 0);
+      }
+    } catch (e) {
+      console.error("Erreur chargement coins", e);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    fetchUserCoins();
+  }, [fetchUserCoins]);
+
+  if (coins === null) return null;
 
   return (
-    <View style={styles.badge}>
-      <MaterialIcons name="monetization-on" size={14} color={DM.gold} />
-      <Text style={styles.text}>{player.coins.toLocaleString('fr-FR')}</Text>
-    </View>
+      <View style={styles.badge}>
+        <MaterialIcons name="monetization-on" size={14} color={DM.gold} />
+        <Text style={styles.text}>{coins.toLocaleString('fr-FR')}</Text>
+      </View>
   );
 }
 

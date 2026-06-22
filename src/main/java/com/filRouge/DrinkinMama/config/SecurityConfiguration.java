@@ -96,12 +96,12 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(WHITE_LIST_URL).permitAll()
                             .requestMatchers("/error").permitAll()
+                            .requestMatchers("auth/authenticate").permitAll()
 
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                             .access((authentication, context) -> new AuthorizationDecision(swaggerEnabled))
 
                             /*User permissions*/
-                            .requestMatchers(HttpMethod.GET, "/users").hasRole("Admin")
                             .requestMatchers("/users/me").authenticated()
                             .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("User", "Admin")
                             .requestMatchers(HttpMethod.GET, "/users/slug/{slug}").hasAnyRole("User", "Admin")
@@ -110,9 +110,14 @@ public class SecurityConfiguration {
 
                             .requestMatchers(HttpMethod.PATCH, "/users/{id}").hasAnyRole("User", "Admin")
 
-                            .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("Admin")
+                            .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("User", "Admin")
 
                             .requestMatchers(HttpMethod.GET, "/cocktails/**").hasAnyRole("User", "Admin")
+
+                            .requestMatchers(HttpMethod.POST, "/cocktails/*/start").hasAnyRole("User", "Admin")
+                            .requestMatchers(HttpMethod.POST, "/cocktails/*/validate").hasAnyRole("User", "Admin")
+                            .requestMatchers(HttpMethod.POST, "/cocktails/*/finish").hasAnyRole("User", "Admin")
+
                             .requestMatchers(HttpMethod.POST, "/cocktails/**").hasAnyRole("LevelDesigner")
                             .requestMatchers(HttpMethod.PATCH, "/cocktails/**").hasAnyRole("LevelDesigner")
                             .requestMatchers(HttpMethod.DELETE, "/cocktails/**").hasAnyRole("LevelDesigner")

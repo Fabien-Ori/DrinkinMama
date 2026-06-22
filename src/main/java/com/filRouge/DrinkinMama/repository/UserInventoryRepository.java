@@ -18,4 +18,9 @@ public interface UserInventoryRepository extends JpaRepository<UserInventory, Lo
             "WHERE ui.user.id = :userId " +
             "AND si.cocktail IS NOT NULL")
     Set<Integer> findUnlockedCocktailIdsByUserId(@Param("userId") Long userId);
+
+    boolean existsByUserIdAndShopItemId(Long userId, Long shopItemId);
+
+    @Query("SELECT ui.shopItem.id FROM UserInventory ui WHERE ui.user.id = :userId")
+    Set<Long> findOwnedItemIdsByUserId(@Param("userId") Long userId);
 }

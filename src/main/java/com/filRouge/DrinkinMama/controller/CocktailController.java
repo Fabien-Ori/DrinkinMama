@@ -3,6 +3,7 @@ package com.filRouge.DrinkinMama.controller;
 import com.filRouge.DrinkinMama.DTO.ActionRequest;
 import com.filRouge.DrinkinMama.DTO.CocktailResponse;
 import com.filRouge.DrinkinMama.DTO.GameSession;
+import com.filRouge.DrinkinMama.DTO.RecipeStepDTO;
 import com.filRouge.DrinkinMama.service.CocktailService;
 import com.filRouge.DrinkinMama.service.GameService;
 import com.filRouge.DrinkinMama.service.UserService;
@@ -10,6 +11,8 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/cocktails")
@@ -47,4 +50,11 @@ public class CocktailController {
         boolean isValid = gameService.validateStep(id, request);
         return ResponseEntity.ok(isValid);
     }
+
+    @PostMapping("/{id}/finish")
+    public ResponseEntity<Void> finishGame(@PathVariable Long id, @RequestParam int points) {
+        gameService.processCocktailCompletion(userService.getCurrentAuthenticatedUser(), points);
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -27,7 +27,7 @@ public class InitDB {
     /**
      * Initialise des utilisateurs par défaut dans la base de données si aucun n'existe déjà.
      * <p>
-     * Ce bean crée quatre utilisateurs avec différents rôles (User, Admin, AuthService, Organizer)
+     * Ce bean crée quatre utilisateurs avec différents rôles (User, Admin)
      * et les enregistre dans la base de données uniquement si celle-ci est vide.
      * Les mots de passe sont encodés avant d'être stockés.
      * </p>

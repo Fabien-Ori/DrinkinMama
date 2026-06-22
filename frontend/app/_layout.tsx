@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { DM } from '@/constants/dm-theme';
-import { PlayerProvider } from '@/context/player-context';
 import {AuthProvider} from "@/context/AuthContext";
 
 export const unstable_settings = {
@@ -26,7 +25,6 @@ const DrinkingMamaTheme = {
 export default function RootLayout() {
   return (
       <AuthProvider>
-        <PlayerProvider>
           <ThemeProvider value={DrinkingMamaTheme}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -36,7 +34,6 @@ export default function RootLayout() {
             </Stack>
             <StatusBar style="dark" />
           </ThemeProvider>
-        </PlayerProvider>
       </AuthProvider>
   );
 }

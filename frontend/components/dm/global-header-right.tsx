@@ -13,7 +13,6 @@ export function GlobalHeaderRight() {
     if (Platform.OS === 'web') {
       localStorage.removeItem('jwt_token');
     }
-    // Redirection vers la page d'authentification
     router.replace('/authentification');
   };
 

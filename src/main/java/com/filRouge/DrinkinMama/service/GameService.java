@@ -11,13 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Service
 public class GameService {
     private final CocktailRepository cocktailRepository;
-    private final Map<Long, GameSession> activeSessions = new ConcurrentHashMap<>();
     private final UserRepository userRepository;
     private final BadgeService badgeService;
 
@@ -43,43 +39,34 @@ public class GameService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        boolean isValid = (step.getTool() == null || step.getTool().getId().toString().equals(request.getToolId()))
-                && (step.getIngredient() == null || step.getIngredient().getId().toString().equals(request.getIngredientId()));
+        boolean isValidTool = (step.getTool() == null && request.getToolId() == null) ||
+                (step.getTool() != null && step.getTool().getId().toString().equals(request.getToolId()));
 
-        if (isValid) {
-            GameSession session = activeSessions.get(cocktailId);
-            if (session != null) {
-                session.setSessionPoints(session.getSessionPoints() + step.getPoints());
-                session.getCompletedSteps().add(step.getId());
-            }
-        }
-        return isValid;
+        boolean isValidIngredient = (step.getIngredient() == null && request.getIngredientId() == null) ||
+                (step.getIngredient() != null && step.getIngredient().getId().toString().equals(request.getIngredientId()));
+
+        return isValidTool && isValidIngredient;
     }
 
     public void processCocktailCompletion(User user, int pointsGagnes) {
-        int nouveauScore = (user.getScore() != null ? user.getScore() : 0) + pointsGagnes;
-        int nouveauTotalCocktails = (user.getCocktailsCompleted() != null ? user.getCocktailsCompleted() : 0) + 1;
+        int scoreActuel = user.getScore() != null ? user.getScore() : 0;
+        int totalCocktailsActuel = user.getCocktailsCompleted() != null ? user.getCocktailsCompleted() : 0;
+        int niveauActuel = user.getLevel() != null ? user.getLevel() : 1;
+
+        int nouveauScore = scoreActuel + pointsGagnes;
+        int nouveauTotalCocktails = totalCocktailsActuel + 1;
+
+        int nouveauNiveau = (nouveauScore / 1000) + 1;
 
         user.setScore(nouveauScore);
         user.setCocktailsCompleted(nouveauTotalCocktails);
-        userRepository.save(user);
 
-        badgeService.checkAndGrantBadges(user, nouveauTotalCocktails, nouveauScore);
-    }
-
-    public void updatePlayerStats(Long userId, int pointsEarned) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-        user.setScore(user.getScore() + pointsEarned);
-        user.setCocktailsCompleted(user.getCocktailsCompleted() + 1);
-
-        int newLevel = (user.getScore() / 1000) + 1;
-
-        if (newLevel > user.getLevel()) {
-            user.setLevel(newLevel);
+        if (nouveauNiveau > niveauActuel) {
+            user.setLevel(nouveauNiveau);
         }
 
         userRepository.save(user);
+
+        badgeService.checkAndGrantBadges(user, nouveauTotalCocktails, nouveauScore);
     }
 }

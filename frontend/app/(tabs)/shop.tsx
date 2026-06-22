@@ -1,16 +1,16 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CoinsBadge } from '@/components/dm/coins-badge';
 import { DM } from '@/constants/dm-theme';
-import { ShopItem } from '@/constants/mock-data';
-import { usePlayer } from '@/context/player-context';
 import { GlobalHeaderRight } from '@/components/dm/global-header-right';
+import { useAuth } from '@/context/AuthContext';
 
-type ShopTab = ShopItem['category'];
+const BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8090').replace(/\/$/, '');
+
+type ShopTab = 'ingredients' | 'recipes' | 'utensils';
 
 const TABS: { id: ShopTab; label: string }[] = [
   { id: 'ingredients', label: 'Ingrédients' },
@@ -20,74 +20,123 @@ const TABS: { id: ShopTab; label: string }[] = [
 
 export default function ShopScreen() {
   const router = useRouter();
-  const { shopItems, buyItem } = usePlayer();
+  const { userToken } = useAuth();
   const [activeTab, setActiveTab] = useState<ShopTab>('ingredients');
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const items = shopItems.filter((item) => item.category === activeTab);
+  const loadShopItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${BASE_URL}/shop`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      const data = await response.json();
+
+      console.log("Données reçues de l'API :", data);
+
+      const itemsList = data._embedded ? data._embedded.shopItems : (Array.isArray(data) ? data : []);
+      setItems(itemsList);
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    if (userToken) loadShopItems();
+  }, [userToken, loadShopItems]);
+
+  const handleBuy = async (itemId: number) => {
+    try {
+      const response = await fetch(`${BASE_URL}/shop/buy/${itemId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      Alert.alert('Succès', 'Article ajouté à votre inventaire !');
+      loadShopItems();
+    } catch (err: any) {
+      Alert.alert('Achat impossible', err.message || 'Une erreur est survenue');
+    }
+  };
+
+  const filteredItems = items.filter((item) => item.category === activeTab);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <MaterialIcons name="arrow-back" size={22} color={DM.text} />
-        </Pressable>
-        <Text style={styles.title}>Boutique</Text>
-        <CoinsBadge />
-        <GlobalHeaderRight />
-      </View>
-
-      <View style={styles.tabs}>
-        {TABS.map((tab) => (
-          <Pressable
-            key={tab.id}
-            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
-            onPress={() => setActiveTab(tab.id)}>
-            <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <MaterialIcons name="arrow-back" size={22} color={DM.text} />
           </Pressable>
-        ))}
-      </View>
+          <Text style={[styles.title, {textAlign:"left"}]}>Boutique</Text>
+          <GlobalHeaderRight />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.items}>
-        {items.length === 0 ? (
-          <Text style={styles.empty}>Aucun article dans cette catégorie.</Text>
-        ) : (
-          items.map((item) => (
-            <View key={item.id} style={styles.item}>
-              <View style={[styles.thumb, { backgroundColor: item.thumbBg }]}>
-                <Text style={styles.emoji}>{item.emoji}</Text>
-              </View>
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemDesc}>{item.description}</Text>
-              </View>
+        <View style={styles.tabs}>
+          {TABS.map((tab) => (
               <Pressable
-                style={[styles.priceBtn, item.owned && styles.priceOwned]}
-                onPress={() => !item.owned && buyItem(item.id)}
-                disabled={item.owned}>
-                {item.owned ? (
-                  <>
-                    <MaterialIcons name="check" size={12} color={DM.tealLight} />
-                    <Text style={styles.priceOwnedText}>Acquis</Text>
-                  </>
-                ) : (
-                  <>
-                    <MaterialIcons name="monetization-on" size={12} color={DM.gold} />
-                    <Text style={styles.priceText}>{item.price}</Text>
-                  </>
-                )}
+                  key={tab.id}
+                  style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+                  onPress={() => setActiveTab(tab.id)}>
+                <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
               </Pressable>
-            </View>
-          ))
+          ))}
+        </View>
+
+        {loading ? (
+            <View style={styles.center}><ActivityIndicator color={DM.gold} /></View>
+        ) : (
+            <ScrollView contentContainerStyle={styles.items}>
+              {filteredItems.length === 0 ? (
+                  <Text style={styles.empty}>Aucun article dans cette catégorie.</Text>
+              ) : (
+                  filteredItems.map((item) => (
+                      <View key={item.id} style={styles.item}>
+                        <View style={[styles.thumb, { backgroundColor: item.thumbBg }]}>
+                          <Text style={styles.emoji}>{item.emoji}</Text>
+                        </View>
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemName}>{item.name}</Text>
+                          <Text style={styles.itemDesc}>{item.description}</Text>
+                        </View>
+                        <Pressable
+                            style={[styles.priceBtn, item.owned && styles.priceOwned]}
+                            onPress={() => !item.owned && handleBuy(item.id)}
+                            disabled={item.owned}>
+                          {item.owned ? (
+                              <>
+                                <MaterialIcons name="check" size={12} color={DM.tealLight} />
+                                <Text style={styles.priceOwnedText}>Acquis</Text>
+                              </>
+                          ) : (
+                              <>
+                                <MaterialIcons name="monetization-on" size={12} color={DM.gold} />
+                                <Text style={styles.priceText}>{item.price}</Text>
+                              </>
+                          )}
+                        </Pressable>
+                      </View>
+                  ))
+              )}
+            </ScrollView>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DM.bg },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     backgroundColor: DM.surface,
     paddingHorizontal: 12,
